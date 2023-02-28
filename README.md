@@ -14,9 +14,9 @@
     ·
     <a href="https://xyyhw.top/"><strong>Hongwei Yi</strong></a>
     ·
-    <a href="https://asc.xmu.edu.cn/t/shensiqi"><strong>Siqi Shen</strong></a>>
+    <a href="https://asc.xmu.edu.cn/t/shensiqi"><strong>Siqi Shen</strong></a>
     ·
-    <a href="https://yuexinma.me/"><strong>Yuexin Ma</strong></a>>
+    <a href="https://yuexinma.me/"><strong>Yuexin Ma</strong></a>
     ·
     <a href="http://www.cwang93.net/index_en.htm"><strong>Cheng Wang</strong></a>
   </p>
@@ -24,9 +24,8 @@
 
   <p align="center">
     <a href="https://arxiv.org/abs/2212.07422">
-      <img src='https://img.shields.io/badge/Paper-PDF-green?style=for-the-badge&logo=adobeacrobatreader&logoWidth=20&logoColor=white&labelColor=66cc00&color=94DD15' alt='Paper PDF'>
+      <img src='https://img.shields.io/badge/Paper-PDF-green?style=for-the-badge&logo=adobeacrobatreader&logoWidth=20&logoColor=white&labelColor=c94330&color=db5a44' alt='Paper PDF'>
     </a>
     <a href='http://www.lidarhumanmotion.net/sloper4d/'>
       <img src='https://img.shields.io/badge/SLOPER4D-Page-orange?style=for-the-badge&logo=Google%20chrome&logoColor=white&labelColor=D35400' alt='Project Page'></a>
-    <a href="https://discord.gg/Vqa7KBGRyk"><img src="https://img.shields.io/discord/940240966844035082?color=7289DA&labelColor=4a64bd&logo=discord&logoColor=white&style=for-the-badge"></a>
   </p>
