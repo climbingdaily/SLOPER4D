@@ -36,3 +36,15 @@
   <a href='http://www.lidarhumanmotion.net/sloper4d/'>
     <img src='https://img.shields.io/badge/SLOPER4D-Page-orange?style=for-the-badge&logo=Google%20chrome&logoColor=white&labelColor=D35400' alt='Project Page'></a>
 </p>
+
+
+## Citation
+```
+@inproceedings{dai2023sloper4d,
+    title     = {SLOPER4D: A Scene-Aware Dataset for Global 4D Human Pose Estimation in Urban Environments},
+    author    = {Dai, Yudi and Lin, YiTai and Lin, XiPing and Wen, Chenglu and Xu, Lan and Yi, Hongwei and Shen, Siqi and Ma, Yuexin and Wang, Cheng},
+    booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2023}
+}
+```
