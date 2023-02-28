@@ -27,7 +27,7 @@
       <img src='https://img.shields.io/badge/Paper-PDF-green?style=for-the-badge&logo=adobeacrobatreader&logoWidth=20&logoColor=white&labelColor=c94330&color=db5a44' alt='Paper PDF(Coming soon)...'>
     </a>
     <a href="">
-      <img src='https://img.shields.io/badge/Dataset-Coming%20soon-lightgrey?style=for-the-badge&labelColor=D35400' alt='Dataset (Coming soon)...'>
+      <img src='https://img.shields.io/badge/Dataset-Coming%20soon-lightgrey?style=for-the-badge' alt='Dataset (Coming soon)...'>
     </a>
     <a href='http://www.lidarhumanmotion.net/sloper4d/'>
       <img src='https://img.shields.io/badge/SLOPER4D-Page-orange?style=for-the-badge&logo=Google%20chrome&logoColor=white&labelColor=D35400' alt='Project Page'></a>
