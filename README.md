@@ -38,6 +38,9 @@
     <img src="./assets/teaser.gif" alt="Logo" width="90%">
   </div>
 
+## News and Updates
+- **03/2023**: Initial release of the visualization Tool ([SMPL-Scene Viewer](https://github.com/climbingdaily/SMPL-Scene-Viewer)) (v1.0)
+
 ## Citation
 ```
 @inproceedings{dai2023sloper4d,
