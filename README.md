@@ -35,7 +35,7 @@
 
 <div align="center">
   <video width="90%" autoplay loop muted>
-    <source src="assets/teaser.mp4" type="video/mp4">
+    <source src="./assets/teaser.mp4" type="video/mp4">
   </video>
 </div>
 
