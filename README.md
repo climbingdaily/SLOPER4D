@@ -33,18 +33,11 @@
     <img src='https://img.shields.io/badge/Homepage-orange?style=for-the-badge&logo=Google%20chrome&logoColor=white&labelColor=D35400' alt='Project Page'></a>
 </p>
 
-<video 
-width="100%"
-style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-src="assets/teaser.mp4" 
-frameborder="no" 
-allowfullscreen="false"
-preload="" 
-muted="muted" 
-autoplay="autoplay"
-playsinline="">
-</video>
+<div align="center">
+  <video width="90%" autoplay loop muted>
+    <source src="assets/teaser.mp4" type="video/mp4">
+  </video>
+</div>
 
   <!-- <div align="center">
     <img src="./assets/teaser.gif" alt="Logo" width="90%">
