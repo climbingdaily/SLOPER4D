@@ -62,8 +62,12 @@
 7 km+ human motions.
 
 *Every human subject signed permission to release their motion data for research purposes.*
-
-<img src="assets/1_data_intro_202332215833.gif" width="50%"><img src="assets/1_data_intro_2_202332215837.gif" width="50%"> 
+<div align="center">
+<img src="assets/1_data_intro_202332215833.gif" width="80%">
+</div>
+<div align="center">
+<img src="assets/1_data_intro_2_202332215837.gif" width="80%"> 
+</div>
 
 ### Dataset breakdown
 | Num | Sequence     | Traj. length ($m$) | Area size ($m^2$) | Frames | Motions                                      |
@@ -107,14 +111,14 @@ For more information on data processing, please see [data-processing/README.md](
 - Comparison between **IMU + ICP** and **our optimization** results.
 
 <div align="center">
-  <img src="./assets/2_compare_202332215842.gif" alt="Logo" width="80%">
+  <img src="./assets/2_compare_202332215842.gif" alt="Logo" width="100%">
 </div>
 <div align="center">
 Borrowing and reading a book on a sofa.
 </div>
 
 <div align="center">
-  <img src="./assets/2_compare_football_202332215855.gif" alt="Logo" width="80%">
+  <img src="./assets/2_compare_football_202332215855.gif" alt="Logo" width="100%">
 </div>
 <div align="center">
 Playing football.
@@ -122,7 +126,7 @@ Playing football.
 
 - Comparison between *original extrinsic parameters* and *our optimization results*.
 <div align="center">
-  <img src="./assets/2_compare_extrinsic_202332215849.gif" alt="Logo" width="80%">
+  <img src="./assets/2_compare_extrinsic_202332215849.gif" alt="Logo" width="100%">
 </div>
 
 
@@ -130,12 +134,12 @@ Playing football.
 - LiDAR-based human pose estimation (HPE)
 
 <div align="center">
-  <img src="./assets/3_compare_lidarcap_20233221594.gif" alt="Logo" width="80%">
+  <img src="./assets/3_compare_lidarcap_20233221594.gif" alt="Logo" width="100%">
 </div>
 
 - Camera-based HPE
 <div align="center">
-  <img src="./assets/3_compare_vibe_20233221598.gif" alt="Logo" width="80%">
+  <img src="./assets/3_compare_vibe_20233221598.gif" alt="Logo" width="100%">
 </div>
 
 
