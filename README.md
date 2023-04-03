@@ -56,7 +56,7 @@
 
 ## Dataset 
 - 15 sequences of 12 human subjects in 
-- 10 scenes in urban environments (1k – 30k 𝑚^2)
+- 10 scenes in urban environments (1k – 30k $m^2$)
 - 100k+ frames multi-source data (20 Hz)
 - including 2D / 3D annotations and 3D scenes;
 7 km+ human motions.
@@ -86,26 +86,16 @@
 | 012 | square_001   | 264              | 3,200            | 6,792  | Making phone calls, waving, drinking          |
 | 013 | sunlightRock001  | 386           | 1,900            | 10,116 | Climbing stairs, taking photos, walking      |
 | 014 | garden_002   | 209              | 4,200            | 5,604  | Stooping, crossing a bridge, sitting cross-legged |
-| 015 | plaza_001    | 365              | 2,700            | 7,989  | Admiring sculptures, eating       
+| 015 | plaza_001    | 365              | 2,700            | 7,989  | Admiring sculptures, eating    |   
 
-### **File structure**
-``` bash
-├── seq{Num}_{Sequence}/
-|   ├── lidar_data/
-|   |   ├── lidar_frames_rot/
-|   |   |   └── '*.pcd' # n frames pcd
-|   |   ├── 'lidar_trajectory.txt'
-|   |   └── 'tracking_traj.txt'
-|   ├── mocap_data/
-|   |   └── '*.bvh'
-|   ├── rgb_data/
-|   |   ├── 'labels.pkl'
-|   |   └── '*.MP4'
-|   └── 'dataset_params.json'
-├── ...
-└── ...
-```
-For more information on data processing, please see [data-processing/README.md](./data_processing/README.md).
+## Raw data processing
+
+For data processing details, please see [readme.md](./processing/readme.md).
+
+
+## Visualization
+Please refer this visualization tool [SMPL-Scene Viewer](https://github.com/climbingdaily/SMPL-Scene-Viewer).
+
 
 ## More qualitative results
 - Comparison between **IMU + ICP** and **our optimization** results.
