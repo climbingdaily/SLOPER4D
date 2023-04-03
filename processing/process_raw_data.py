@@ -1,5 +1,5 @@
 ################################################################################
-# File: /data_processing.py                                            #
+# File: /data_processing.py                                                    #
 # Created Date: Monday July 4th 2022                                           #
 # Author: climbingdaily                                                        #
 # -----                                                                        #
@@ -9,6 +9,7 @@
 # Copyright (c) 2022 yudidai                                                   #
 # -----                                                                        #
 # HISTORY:                                                                     #
+# 2023-04-03	A simplified verstion for SLOPER4D dataset processing          #
 ################################################################################
 
 import sys
@@ -448,7 +449,7 @@ if __name__ == '__main__':
     parser.add_argument("-VS", "--voxel_size", type=float, default=0.06, 
                         help="The voxel filter parameter for TSDF fusion")
 
-    parser.add_argument("--skip_frame", type=int, default=10, 
+    parser.add_argument("--skip_frame", type=int, default=8, 
                         help='The everay n frame used for mapping')
     
     parser.add_argument('--tsdf', action='store_true',
