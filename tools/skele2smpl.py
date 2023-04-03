@@ -10,14 +10,7 @@ ________________________,--._(___Y___)_,--._______________________
 # from .smpl import SMPL
 
 import numpy as np
-import argparse
-# from .generate_ply import save_ply
 import math
-import os
-import pandas as pd
-import torch
-import sys
-from pathlib import Path
 
 '''
 pose --> rotation of 24 skelentons

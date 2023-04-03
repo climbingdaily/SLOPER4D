@@ -24,10 +24,8 @@ import configargparse
 
 sys.path.append(dirname(split(abspath( __file__))[0]))
 
-from tools import poses_to_joints, mocap_to_smpl_axis, save_json_file, read_json_file, \
-                  sync_lidar_mocap, load_csv_data, compute_similarity
-
 from tools.tsdf_fusion_pipeline import VDBFusionPipeline
+from tools import poses_to_joints, mocap_to_smpl_axis, save_json_file, read_json_file, sync_lidar_mocap, load_csv_data
 
 field_fmts = ['%d', '%.6f', '%.6f', '%.6f', '%.6f', '%.6f', '%.6f', '%.6f', '%.3f']
 
@@ -342,93 +340,24 @@ def save_sync_data(root_folder, start=0, end=np.inf):
     
     return sync_pose, trans, sync_lidarid, param_file   # type: ignore
 
-def finetune_first_person_data(synced_data_file, lidar_traj):
+def add_lidar_traj(synced_data_file, lidar_traj):
     """
-    > It takes the LiDAR trajectory and the parameter file, and then it saves the LiDAR trajectory in
-    the parameter file
+    It takes a synced data file and a lidar trajectory, and saves the lidar trajectory in the synced
+    data file
     
     Args:
-      synced_data_file: the path to the parameter file.
-      lidar_traj      : the trajectory of the first person, which is a numpy array with shape (N, 3), where N
-    is the number of frames.
+      synced_data_file: the file that contains the synced data
+      lidar_traj: a list of lidar poses, each of which is a list of [ID, x, y, z, qx, qy, qz, qw, timestamp]
     """
-    # save_file = os.path.join(dirname(param_file), 'synced_lidar_trajectory.txt')
-    # np.savetxt(save_file, lidar_traj, fmt=field_fmts)
-    
+
     with open(synced_data_file, "rb") as f:
         save_data = pickle.load(f)
 
-    
-    if 'first_person' in save_data and 'pose' in save_data['first_person']:
-        fp_data = save_data['first_person']
-        first_pose = fp_data['pose'].copy()
-        mocap_tran = fp_data['mocap_trans'].copy()
-            
-        try:
-            root_relative_joints = poses_to_joints(first_pose)
-        except:
-            root_relative_joints = poses_to_joints(first_pose, is_cuda=False, batch_size=1024)
-        root_to_head = root_relative_joints[:, 15] - root_relative_joints[:, 0]
-        ROT, _, _ = compute_similarity(
-            mocap_tran[:, :2] + root_to_head[:, :2], lidar_traj[:, 1:3])
-        delta_degree = np.linalg.norm(R.from_matrix(ROT).as_rotvec()) * 180 / np.pi
-        print(f'[First person] {delta_degree:.1f}° around Z-axis from the mocap to LiDAR data.')
-
-        scaled_trans = (mocap_tran @ ROT.T)
-        scaled_trans -= scaled_trans[0] - mocap_tran[0] # move to the start position
-
-        first_pose[:, :3] = (R.from_matrix(
-            ROT) * R.from_rotvec(first_pose[:, :3])).as_rotvec()
-
-        joints, verts = poses_to_joints(first_pose[:1], return_verts=True) 
-        feet_center = (joints[0, 7] + joints[0, 8])/2
-        feet_center[2] = verts[..., 2].min()
-        scaled_trans -= scaled_trans[0] + feet_center  # 使得第一帧位于原点
-
-        def delata_theta(i, jlist=[6, 9, 13, 14, 15, 16, 20, 21]):
-            """
-            It calculates the difference between the first person's pose and the second person's pose, and then
-            applies the difference to the first person's pose
-            
-            Args:
-              i: the frame number
-              jlist: the list of joints to be modified
-            
-            Returns:
-              The delta rotation matrix
-            """
-            # only for some specific scenes
-            # 0623003
-            # 0623004
-            delt_rot = []
-            for j in range(1, 24):
-                dr = R.from_rotvec(save_data['second_person']['pose'][i, j*3:j*3+3]) * R.from_rotvec(first_pose[i, j*3:j*3+3]).inv()
-                first_pose[:, j*3:j*3+3] = (dr * R.from_rotvec(first_pose[:, j*3:j*3+3])).as_rotvec()
-                dr.as_matrix()
-                delt_rot.append(dr.as_matrix())
-                print('Delta degrees:', j, dr.as_euler('yzx', degrees=True))
-            return np.array(delt_rot)
-
-        if '0623' in synced_data_file:
-            delata_theta(1)
-            for j in [21, 23]: # right hand
-                first_pose[:, j*3:j*3+3] = first_pose[:1, j*3:j*3+3].copy().repeat(len(first_pose), axis=0)
-            if '02' in synced_data_file:
-                second_pose = save_data['second_person']['pose']
-                second_pose[:, j*3:j*3+3] = second_pose[:1, j*3:j*3+3].copy().repeat(len(first_pose), axis=0)
-
-        fp_data['origin_trans'] = fp_data['mocap_trans'].copy()
-        fp_data['origin_pose'] = fp_data['pose'].copy()
-        fp_data['lidar_traj'] = lidar_traj
-        fp_data['mocap_trans'] = scaled_trans
-        fp_data['pose'] = first_pose
-
-    else:
-        save_data['first_person'] = {'lidar_traj': lidar_traj}
+    save_data['first_person'] = {'lidar_traj': lidar_traj}
 
     with open(synced_data_file, "wb") as f:
         pickle.dump(save_data, f)
-        print(f"File saved in {synced_data_file}")
+        print(f"Lidar traj saved in {synced_data_file}")
 
 
 if __name__ == '__main__':
@@ -489,7 +418,7 @@ if __name__ == '__main__':
             root_folder, 
             start = args.start_idx, 
             end   = args.end_idx)
-        finetune_first_person_data(synced_data_file, lidar_traj[lidar_frameid])
+        add_lidar_traj(synced_data_file, lidar_traj[lidar_frameid])
 
     # --------------------------------------------
     # 3. Use TSDF fusion to build the scene mesh

@@ -11,23 +11,22 @@
 # HISTORY:                                                                     #
 ################################################################################
 
-import numpy as np
 import os
-import configargparse
 import sys
-from scipy.spatial.transform import Rotation as R
-from tqdm import tqdm
+import configargparse
 from glob import glob
-import pickle
-import open3d as o3d
-import matplotlib.pyplot as plt
 import functools
-from tqdm import tqdm
+
+import pickle
 import torch
+import numpy as np
+import open3d as o3d
+from scipy.spatial.transform import Rotation as R
+import matplotlib.pyplot as plt
 
 sys.path.append(os.path.dirname(os.path.split(os.path.abspath( __file__))[0]))
 
-from tools import filterTraj, erase_background, multi_func, save_ply, fix_points_num, compute_similarity, poses_to_vertices_torch, select_visible_points, icp_mesh2point
+from tools import filterTraj, erase_background, multi_func, save_ply, compute_similarity, poses_to_vertices_torch, select_visible_points, icp_mesh2point
 
 def load_all_files_id(folder):
     """
@@ -102,49 +101,6 @@ def save_smpl(save_dir, lidar_id, pose, trans, beta=np.zeros(10), desc='first_pe
     vertices, _, _ = poses_to_vertices_torch(pose, trans, 1024, betas=torch.tensor([beta]), is_cuda=False)
 
     multi_func(save_ply, 8, len(vertices), f'{desc} SMPL', False, vertices.cpu().numpy(), mesh_list)
-
-def load_human_pcd(save_dir, sync_lidar_id, human_data_dir, dataset_params):
-    """
-    > It reads all the human point clouds in the `human_data_dir` and saves the point clouds that are in
-    the `sync_lidar_id` list to the `second_person_dir` directory
-    
-    Args:
-      save_dir: the directory to save the processed data.
-      sync_lidar_id: the frame id of the lidar data
-      human_data_dir: the directory where the human point cloud data is stored.
-      dataset_params: a dictionary containing the following keys:
-    """
-    # import shutil
-    import open3d as o3d
-    second_person_dir = os.path.join(save_dir, 'second_person')
-    os.makedirs(second_person_dir, exist_ok=True)
-
-    file_by_frameid, list_by_human_id = load_all_files_id(human_data_dir)
-
-    # id_list = dataset_params['id_list'] if 'id_list' in dataset_params.keys() else [k for k in list_by_human_id]
-    id_list = [k for k in list_by_human_id]
-    keep_frame = []    
-    keep_points = []
-
-    print(f'Load cropped human pcd in {human_data_dir}')
-    for frame_id in tqdm(file_by_frameid):
-        for human_id in file_by_frameid[frame_id]:
-            
-            source = f'{human_data_dir}/{human_id}_{frame_id}.pcd'
-            # target = f'{second_person_dir}/2_{frame_id}.pcd'
-
-            if int(frame_id) not in keep_frame \
-                and int(frame_id) in sync_lidar_id \
-                and human_id in id_list:
-
-                pts = np.asarray(o3d.io.read_point_cloud(source).points)
-                keep_points.append(fix_points_num(pts, 512))
-                # shutil.copyfile(source, target)
-                keep_frame.append(int(frame_id))
-            else:
-                print(f'Frame {frame_id} duplicated in human {human_id}.')
-
-    return np.stack(keep_frame), np.stack(keep_points)
 
 def get_traj_scale(T1, T2, diff_id, thresh=0.05):
     """
