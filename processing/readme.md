@@ -1,6 +1,7 @@
 # Data processing pipeline
 
-## **Data sequence structure**
+
+## **Data structure**
 ```bash
 ├── root_folder
    ├── lidar_data/
@@ -18,7 +19,7 @@
 
 - Define the variable `$root_folder`
 ```bash
-root_folder=root_folder_path
+root_folder=/path/to/root_folder
 ```
 
 ## **Mocap data processing** 
@@ -46,7 +47,7 @@ root_folder=root_folder_path
 
 ## **LiDAR data processing** 
 
-- Scene Mesh reconstruction (With TSDF fusion) and human data generation
+1. Scene Mesh reconstruction (With TSDF fusion) and human data generation
    ``` bash
    python processing/process_raw_data.py --root_folder $root_folder --tsdf --sync 
    ```
@@ -62,19 +63,19 @@ root_folder=root_folder_path
    
    optional arguments:
    ```
-  --root_folder         The data's root directory
-  --traj_file 
-  --params_file 
-  -S, --start_idx       The start frame index in LiDAR for processing, specified when sychronization time is too late
-  -E, --end_idx         The end frame index in LiDAR for processing, specified when sychronization time is too early.
-  -VS, --voxel_size     The voxel filter parameter for TSDF fusion
-  --skip_frame          The everay n frame used for mapping
-  --tsdf                Use VDB fusion to build the scene mesh 
-  --sdf_trunc           The trunction distance for SDF funtion
-  --sync                Synced all data and save a pkl based on the params_file
+   --root_folder         The data's root directory
+   --traj_file 
+   --params_file 
+   -S, --start_idx       The start frame index in LiDAR for processing, specified when sychronization time is too late
+   -E, --end_idx         The end frame index in LiDAR for processing, specified when sychronization time is too early.
+   -VS, --voxel_size     The voxel filter parameter for TSDF fusion
+   --skip_frame          The everay n frame used for mapping
+   --tsdf                Use VDB fusion to build the scene mesh 
+   --sdf_trunc           The trunction distance for SDF funtion
+   --sync                Synced all data and save a pkl based on the params_file
    ```
 
-- Human point clouds cropping
+2. Human point clouds cropping
    ```bash
    python processing/process_human_points.py -R $root_folder [--scene <scene path>]
    ```
