@@ -11,61 +11,21 @@
 # HISTORY:                                                                     #
 ################################################################################
 
-import os
-import sys
-import configargparse
-from glob import glob
-import functools
-
-import pickle
-import torch
 import numpy as np
-import open3d as o3d
+import os
+import configargparse
+import sys
 from scipy.spatial.transform import Rotation as R
+from glob import glob
+import pickle
+import open3d as o3d
 import matplotlib.pyplot as plt
+import functools
+import torch
 
 sys.path.append(os.path.dirname(os.path.split(os.path.abspath( __file__))[0]))
 
 from tools import filterTraj, erase_background, multi_func, save_ply, compute_similarity, poses_to_vertices_torch, select_visible_points, icp_mesh2point
-
-def load_all_files_id(folder):
-    """
-    It takes a folder and returns two dictionaries, one with the frame id as the key and the human ids
-    as the value, and the other with the human id as the key and the frame ids as the value
-    
-    Args:
-      folder: the folder where the data is stored
-    """
-    results = os.listdir(folder)
-    files_by_framid = {}
-    files_by_humanid = {}
-    for f in results:
-        if not f.endswith('.pcd'):
-            continue
-        basename = f.split('.')[0]
-        humanid = basename.split('_')[0]
-        frameid = basename.split('_')[1]
-        if frameid in files_by_framid:
-            files_by_framid[frameid].append(humanid)
-        else:
-            files_by_framid[frameid] = [humanid]
-
-        if humanid in files_by_humanid:
-            files_by_humanid[humanid].append(frameid)
-        else:
-            files_by_humanid[humanid] = [frameid]
-
-    files_by_humanid = dict(
-        sorted(files_by_humanid.items(), key=lambda x: int(x[0])))
-    files_by_framid = dict(
-        sorted(files_by_framid.items(), key=lambda x: int(x[0])))
-
-    for key, frame in files_by_humanid.items():
-        files_by_humanid[key] = sorted(frame, key=lambda x: int(x))
-    for key, frame in files_by_framid.items():
-        files_by_framid[key] = sorted(frame, key=lambda x: int(x))
-
-    return files_by_framid, files_by_humanid
 
 def crop_scene(scene, positions, radius=1):
     """
@@ -126,7 +86,7 @@ def fuse_trans(root_folder,
                 trans, 
                 sync_lidar_id, 
                 human_pcds=None, 
-                second_frame_id:list=[], 
+                second_frame_id=[], 
                 frame_rate=20, 
                 traj_data=None,
                 save_traj=True):
@@ -159,7 +119,6 @@ def fuse_trans(root_folder,
 
         except Exception as e:
             print(e.args[0])
-
     elif traj_data is not None:
         tracking_traj = traj_data[:, :3]
     else:
