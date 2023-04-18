@@ -89,7 +89,7 @@
 | 015 | plaza_001    | 365              | 2,700            | 7,989  | Admiring sculptures, eating    |   
 
 ## Visualization and data processing
-Please see [readme](./processing/readme.md).
+Please see [readme](./src/readme.md).
 
 
 ## More qualitative results
