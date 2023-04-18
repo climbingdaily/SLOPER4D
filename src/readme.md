@@ -20,7 +20,10 @@
 
 ## **Dependencies**
 - FFmpeg (version >= 3.4.11)
-- SMPL: Download the SMPL model `basicModel_neutral_lbs_10_207_0_v1.0.0.pkl`, `basicModel_f_lbs_10_207_0_v1.0.0.pkl`, `basicModel_m_lbs_10_207_0_v1.0.0.pkl` and `J_regressor_extra.npy` from http://smpl.is.tue.mpg.de and put them in `smpl` directory.
+- [CSF](https://github.com/jianboqi/CSF) (Optional)
+   - Recommend use `pip` to install it in your conda environment
+- SMPL
+   - Download `basicModel_neutral_lbs_10_207_0_v1.0.0.pkl`, `basicModel_f_lbs_10_207_0_v1.0.0.pkl`, `basicModel_m_lbs_10_207_0_v1.0.0.pkl` and `J_regressor_extra.npy` from http://smpl.is.tue.mpg.de and put them in `smpl` directory.
 
 ## **Environment**
 - Python 3.8.12
