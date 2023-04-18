@@ -37,7 +37,8 @@ git clone https://github.com/climbingdaily/SLOPER4D.git
 ```bash
 conda create --name sloper4d python==3.8 -y
 conda activate sloper4d
-pip install -r requirement.txt
+conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=11.0 -c pytorch
+pip install -r requirements.txt
 ```
 
 ## **Data loader**
