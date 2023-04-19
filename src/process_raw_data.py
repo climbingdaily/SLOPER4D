@@ -419,21 +419,25 @@ if __name__ == '__main__':
             start = args.start_idx, 
             end   = args.end_idx)
         add_lidar_traj(synced_data_file, lidar_traj[lidar_frameid])
-
+        mapping_start, mapping_end = lidar_frameid[0] + 100, lidar_frameid[-1] - 100
+    else:
+        mapping_start, mapping_end = args.start_idx, args.end_idx
+        
     # --------------------------------------------
     # 3. Use TSDF fusion to build the scene mesh
     # --------------------------------------------
     if args.tsdf:
         kitti_poses = traj_to_kitti_main(lidar_traj, args.start_idx, args.end_idx)
-        vdbf = VDBFusionPipeline(lidar_dir, kitti_poses, 
-                                start         = args.start_idx,
-                                end           = args.end_idx,
+        vdbf = VDBFusionPipeline(lidar_dir, 
+                                traj_to_kitti_main(lidar_traj, mapping_start, mapping_end), 
+                                start         = mapping_start,
+                                end           = mapping_end,
                                 map_name      = os.path.basename(root_folder),
                                 sdf_trunc     = args.sdf_trunc,
                                 voxel_size    = args.voxel_size, 
                                 space_carving = True)
         vdbf.run(skip=args.skip_frame)
-        # vdbf.segment_ground()
+        vdbf.segment_ground()
 
 # python process_raw_data.py --root_folder <root folder> [--tsdf] [--sync]
 # --tsdf,         building the scene mesh

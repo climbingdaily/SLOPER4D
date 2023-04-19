@@ -88,13 +88,8 @@
 | 014 | garden_002   | 209              | 4,200            | 5,604  | Stooping, crossing a bridge, sitting cross-legged |
 | 015 | plaza_001    | 365              | 2,700            | 7,989  | Admiring sculptures, eating    |   
 
-## Raw data processing
-
-For data processing details, please see [readme.md](./processing/readme.md).
-
-
-## Visualization
-Please refer this visualization tool [SMPL-Scene Viewer](https://github.com/climbingdaily/SMPL-Scene-Viewer).
+## Visualization and data processing
+Please see [readme](./src/readme.md).
 
 
 ## More qualitative results
@@ -137,6 +132,10 @@ Playing football.
 <div align="center">
   <img src="./assets/4_compare_ghpe_glamr_202332215913.gif" alt="Logo" width="80%">
 </div>
+
+## License
+The SLOPER4D dataset is published under the Creative [Commons Attribution-NonCommercial-ShareAlike 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) License. You must attribute the work in the manner specified by the authors, you may not use this work for commercial purposes and if you alter, transform, or build upon this work, you may distribute the resulting work only under the same license. Contact us if you are interested in commercial usage.
+
 
 ## Citation
 ```

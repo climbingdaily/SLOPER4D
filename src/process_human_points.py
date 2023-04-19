@@ -11,61 +11,21 @@
 # HISTORY:                                                                     #
 ################################################################################
 
-import os
-import sys
-import configargparse
-from glob import glob
-import functools
-
-import pickle
-import torch
 import numpy as np
-import open3d as o3d
+import os
+import configargparse
+import sys
 from scipy.spatial.transform import Rotation as R
+from glob import glob
+import pickle
+import open3d as o3d
 import matplotlib.pyplot as plt
+import functools
+import torch
 
 sys.path.append(os.path.dirname(os.path.split(os.path.abspath( __file__))[0]))
 
 from tools import filterTraj, erase_background, multi_func, save_ply, compute_similarity, poses_to_vertices_torch, select_visible_points, icp_mesh2point
-
-def load_all_files_id(folder):
-    """
-    It takes a folder and returns two dictionaries, one with the frame id as the key and the human ids
-    as the value, and the other with the human id as the key and the frame ids as the value
-    
-    Args:
-      folder: the folder where the data is stored
-    """
-    results = os.listdir(folder)
-    files_by_framid = {}
-    files_by_humanid = {}
-    for f in results:
-        if not f.endswith('.pcd'):
-            continue
-        basename = f.split('.')[0]
-        humanid = basename.split('_')[0]
-        frameid = basename.split('_')[1]
-        if frameid in files_by_framid:
-            files_by_framid[frameid].append(humanid)
-        else:
-            files_by_framid[frameid] = [humanid]
-
-        if humanid in files_by_humanid:
-            files_by_humanid[humanid].append(frameid)
-        else:
-            files_by_humanid[humanid] = [frameid]
-
-    files_by_humanid = dict(
-        sorted(files_by_humanid.items(), key=lambda x: int(x[0])))
-    files_by_framid = dict(
-        sorted(files_by_framid.items(), key=lambda x: int(x[0])))
-
-    for key, frame in files_by_humanid.items():
-        files_by_humanid[key] = sorted(frame, key=lambda x: int(x))
-    for key, frame in files_by_framid.items():
-        files_by_framid[key] = sorted(frame, key=lambda x: int(x))
-
-    return files_by_framid, files_by_humanid
 
 def crop_scene(scene, positions, radius=1):
     """
@@ -126,7 +86,7 @@ def fuse_trans(root_folder,
                 trans, 
                 sync_lidar_id, 
                 human_pcds=None, 
-                second_frame_id:list=[], 
+                second_frame_id=[], 
                 frame_rate=20, 
                 traj_data=None,
                 save_traj=True):
@@ -159,7 +119,6 @@ def fuse_trans(root_folder,
 
         except Exception as e:
             print(e.args[0])
-
     elif traj_data is not None:
         tracking_traj = traj_data[:, :3]
     else:
@@ -430,7 +389,7 @@ def make_bbox(smpl):
         bbox.append([bounds.min_bound - extent, bounds.max_bound + extent])
     return bbox
 
-def main(root_folder, scene_path):
+def main(root_folder, scene_path, iters=2):
     save_dir = os.path.join(root_folder, 'synced_data')
     param_file = os.path.join(save_dir, 'humans_param.pkl')
     os.makedirs(save_dir, exist_ok=True)
@@ -465,9 +424,14 @@ def main(root_folder, scene_path):
         fused_trans = fused_roots_joints + joints_to_trans_offset
         orit_trans = orit_roots_joints + joints_to_trans_offset
         
-        # 根据结果，再次优化
-        for i in range(2):
+        count = 0
+        while True:
             pose = f['second_person']['pose'].copy()
+
+            count += 1
+            if count > iters:
+                break
+
             pose[:, :3] = (R.from_matrix(rot) * R.from_rotvec(pose[:, :3])).as_rotvec()
             with torch.no_grad():
                 smpl, _, _ = poses_to_vertices_torch(pose, fused_trans, 1024, betas=torch.tensor([beta]), gender=gender, is_cuda=False)
@@ -531,20 +495,20 @@ if __name__ == '__main__':
     parser = configargparse.ArgumentParser()
                         
     parser.add_argument("--root_folder", '-R', type=str, default='')
-    
+    parser.add_argument("--iters", '-I', type=int, default=2)
     parser.add_argument("--scene", '-S', type=str, default=None)
- 
+    parser.add_argument("--ground", action='store_true', 
+                        help='wether to use the ground file as the the background. not used in multi-floor cases')
+    
     args, opts = parser.parse_known_args()
+    append = '_ground' if args.ground else ''
 
     if args.scene is None:
         try:
-            scene_path = glob(args.root_folder + '/lidar_data/*frames.ply')[0]
+            scene_path = glob(args.root_folder + f'/lidar_data/*frames{append}.ply')[0]
         except:
-            try:
-                scene_path = glob(args.root_folder + '/lidar_data/*_scans_scene.ply')[0]
-            except:
-                print('No default scene file!!!')
-                exit(0)
+            print('No default scene file!!!')
+            exit(0)
     else:
         scene_path = os.path.join(args.root_folder, 'lidar_data', args.scene)
         
@@ -556,4 +520,4 @@ if __name__ == '__main__':
             print('No scene file!!!')
             exit(0)
         
-    main(args.root_folder, scene_path)
+    main(args.root_folder, scene_path, args.iters)
