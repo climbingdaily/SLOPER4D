@@ -55,7 +55,7 @@ root_folder=/path/to/root_folder
 1. Convert the `bvh` file to `csv` files
    ```bash
    # pip install bvh-converter 
-   bvhconverter -r "/path/to/bvh"
+   bvh-converter -r "/path/to/bvh"
    ```
 
 2. Jumping peak detection. Used to double check the synchronization time in `dataset_params.json`
