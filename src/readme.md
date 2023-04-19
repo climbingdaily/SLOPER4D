@@ -89,24 +89,23 @@ root_folder=/path/to/root_folder
    ```bash
    python src/process_human_points.py -R $root_folder [--scene <scene path>]
       ```
-- ### **RGB data (for visualization)** 
-   Coming soon...
-
-
-## **Visualization**
-
-- ### **RGB visualization**
+- ### **RGB data ** 
    Under `processing`, convert videos to images by:
 
     ```shell
     python vdo2imgs.py --save_path "path to dataset"
     ```
 
-    Visualize the labels: under `processing`: 
+
+## **Visualization**
+
+- ### **RGB visualization**
+
+    Under `processing`: 
 
 1.  Download and place `SMPL_*.pkl` models in `processing/smpl_models`
 
-2.  Install [detectron2](https://github.com/facebookresearch/detectron2.git), [openGL](https://github.com/klintan/pypcd.git)
+2.  Install [detectron2](https://github.com/facebookresearch/detectron2.git), [pypenGL](https://github.com/mcfletch/pyopengl.git), [pypcd](https://github.com/klintan/pypcd.git)
 
 3.  Change the project path and dataset path in `render_sence_base.sh`, then use `render_sence_all.sh` to generate videos under `rgb_datas`
 

@@ -14,3 +14,7 @@ torch==1.7.0
 tqdm==4.62.3
 trimesh==3.9.32
 vdbfusion==0.1.6
+smplx==0.1.28
+pyquaternion==0.9.9
+pyrender==0.1.45
+trimesh==3.15.3
