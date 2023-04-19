@@ -85,9 +85,7 @@ root_folder=/path/to/sequence_folder
 
    Human point clouds cropping
    ```bash
-   python src/process_human_points.py -R $root_folder 
-   p
-   [--scene <scene path>]
+   python src/process_human_points.py -R $root_folder  
    ```
 - ### **RGB data** 
    Convert the video to images frame by frame:
