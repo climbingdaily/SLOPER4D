@@ -12,9 +12,9 @@ from os.path import join
 
 SMPL_DIR = os.path.split(os.path.abspath( __file__))[0]
 
-SMPL_NEUTRAL = os.path.join(SMPL_DIR, 'basicModel_neutral_lbs_10_207_0_v1.0.0.pkl')
-SMPL_FEMALE = os.path.join(SMPL_DIR, 'basicModel_f_lbs_10_207_0_v1.0.0.pkl')
-SMPL_MALE = os.path.join(SMPL_DIR, 'basicModel_m_lbs_10_207_0_v1.0.0.pkl')
+SMPL_NEUTRAL = os.path.join(SMPL_DIR, 'SMPL_NEUTRA.pkl')
+SMPL_FEMALE = os.path.join(SMPL_DIR, 'SMPL_FEMALE.pkl')
+SMPL_MALE = os.path.join(SMPL_DIR, 'SMPL_MALE.pkl')
 
 JOINT_REGRESSOR_TRAIN_EXTRA = os.path.join(SMPL_DIR, 'J_regressor_extra.npy')
 
@@ -249,12 +249,3 @@ body_parts = {
     'arms' : [16, 17, 18, 19, 20, 21],
     'ends' : [10, 11, 22, 23]
 }
-
-import numpy as np
-body_weight = np.asarray([1.] * 24).astype('float32')
-body_weight[body_parts['ends']] = 0.1
-body_weight[body_parts['legs']] = 0.5
-body_weight[body_parts['arms']] = 0.5
-
-unstable_joints = body_parts['legs'] + body_parts['arms'] + body_parts['ends']
-stable_joints   = body_parts['torso'] + body_parts['heads']
