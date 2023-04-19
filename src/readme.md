@@ -91,20 +91,19 @@ root_folder=/path/to/root_folder
       ```bash
       python src/process_human_points.py -R $root_folder [--scene <scene path>]
       ```
-- ### **RGB data (for visualization)** 
-   Coming soon...
-
-
-## **Visualization**
-
-- ### **RGB visualization**
+- ### **RGB data ** 
    Under `processing`, convert videos to images by:
 
     ```shell
     python vdo2imgs.py --save_path "path to dataset"
     ```
 
-    Visualize the labels: under `processing`: 
+
+## **Visualization**
+
+- ### **RGB visualization**
+
+    Under `processing`: 
 
 1.  Download and place `SMPL_*.pkl` models in `processing/smpl_models`
 
