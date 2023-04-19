@@ -88,9 +88,11 @@
 | 014 | garden_002   | 209              | 4,200            | 5,604  | Stooping, crossing a bridge, sitting cross-legged |
 | 015 | plaza_001    | 365              | 2,700            | 7,989  | Admiring sculptures, eating    |   
 
-## Visualization and data processing
-Please see [readme](./src/readme.md).
+## Data processing
+Please see [readme](./src/readme.md). 
 
+## Visualization
+Please see [readme](./visualization/readme.md).
 
 ## More qualitative results
 - Comparison between **IMU + ICP** and **our optimization** results.

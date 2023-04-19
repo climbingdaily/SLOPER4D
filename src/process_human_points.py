@@ -105,7 +105,7 @@ def fuse_trans(root_folder,
     Returns:
       lidar_trans, scaled_trans, bboxes, ROT
     """
-    tracking_traj_path = glob(root_folder + '/*tracking_traj.txt')
+    tracking_traj_path = glob(root_folder + '/lidar_data/*tracking_traj.txt')
 
     if len(tracking_traj_path) > 0 and traj_data is None:
         traj_data = np.loadtxt(tracking_traj_path[0])

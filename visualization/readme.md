@@ -4,7 +4,7 @@
 
     Under `visualization`: 
 
-1.  Install [detectron2](https://github.com/facebookresearch/detectron2.git), [pypenGL](https://github.com/mcfletch/pyopengl.git), [pypcd](https://github.com/klintan/pypcd.git)
+1.  Install [detectron2](https://github.com/facebookresearch/detectron2.git), [pypenGL](https://github.com/mcfletch/pyopengl.git)
 
 2.  Change the project path and dataset path in `render_sence_base.sh`, then use `render_sence_all.sh` to generate videos under `rgb_datas`
 
