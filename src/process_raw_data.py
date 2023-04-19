@@ -437,7 +437,10 @@ if __name__ == '__main__':
                                 voxel_size    = args.voxel_size, 
                                 space_carving = True)
         vdbf.run(skip=args.skip_frame)
-        vdbf.segment_ground()
+        try:
+            vdbf.segment_ground()
+        except Exception as e:
+            print(e.args[0])
 
 # python process_raw_data.py --root_folder <root folder> [--tsdf] [--sync]
 # --tsdf,         building the scene mesh
