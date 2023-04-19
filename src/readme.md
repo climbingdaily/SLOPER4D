@@ -18,12 +18,6 @@
    └── 'dataset_params.json'       # meta info
 ```
 
-## **Dependencies**
-- FFmpeg (version >= 3.4.11)
-- [CSF](https://github.com/jianboqi/CSF) (Optional)
-   - Recommend use `pip` to install it in your conda environment
-- SMPL
-   - Download `basicModel_neutral_lbs_10_207_0_v1.0.0.pkl`, `basicModel_f_lbs_10_207_0_v1.0.0.pkl`, `basicModel_m_lbs_10_207_0_v1.0.0.pkl` and `J_regressor_extra.npy` from http://smpl.is.tue.mpg.de and put them in `smpl` directory.
 
 ## **Environment**
 - Python 3.8.12
@@ -44,6 +38,12 @@ conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=11
 pip install -r requirements.txt
 ```
 
+3. **Dependencies**
+   - FFmpeg (version >= 3.4.11)
+   - [CSF](https://github.com/jianboqi/CSF) (Optional)
+      Recommend use `pip` to install it in your conda environment
+   - SMPL
+      - Download v1.0.0 version SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl`, `SMPL_MALE.pkl` and `J_regressor_extra.npy` from http://smpl.is.tue.mpg.de and put them in `smpl` directory.
 ## **Data loader**
 coming soon...
 
