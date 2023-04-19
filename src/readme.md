@@ -37,59 +37,57 @@ conda activate sloper4d
 conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=11.0 -c pytorch
 pip install -r requirements.txt
 ```
+## **Dependencies**
+- **SMPL**: Download v1.0.0 version SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl`, `SMPL_MALE.pkl` and `J_regressor_extra.npy` from http://smpl.is.tue.mpg.de and put them in `smpl` directory.
+- [**CSF**](https://github.com/jianboqi/CSF) (Optional)
+- **FFmpeg** (version >= 3.4.11)
 
-3. **Dependencies**
-   - FFmpeg (version >= 3.4.11)
-   - [CSF](https://github.com/jianboqi/CSF) (Optional)
-      Recommend use `pip` to install it in your conda environment
-   - SMPL
-      - Download v1.0.0 version SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl`, `SMPL_MALE.pkl` and `J_regressor_extra.npy` from http://smpl.is.tue.mpg.de and put them in `smpl` directory.
 ## **Data loader**
 coming soon...
 
 
-## **Data processing**
+## **Processing**
 ```bash
 root_folder=/path/to/root_folder
 ```
 
 - ### **Mocap data** 
-   1. Convert the `bvh` file to `csv` files
-      ```bash
-      # pip install bvh-converter 
-      bvhconverter -r "/path/to/bvh"
-      ```
+1. Convert the `bvh` file to `csv` files
+   ```bash
+   # pip install bvh-converter 
+   bvhconverter -r "/path/to/bvh"
+   ```
 
-   2. Jumping peak detection. Used to double check the synchronization time in `dataset_params.json`
-      ```bash
-      python tools/detect_jumps.py -M "/path/to/bvh" 
-      ```
+2. Jumping peak detection. Used to double check the synchronization time in `dataset_params.json`
+   ```bash
+   python tools/detect_jumps.py -M "/path/to/bvh" 
+   ```
 
 - ### **LiDAR data** 
 
-   1. Scene Mesh reconstruction (With TSDF fusion) and human data generation
-      ``` bash
-      python src/process_raw_data.py --root_folder $root_folder --tsdf --sync 
-      ```
-      optional arguments:
-      ```
-      --root_folder          The data's root directory
-      --traj_file  
-      --params_file  
-      -S, --start_idx        The start frame index in LiDAR for processing, 
-                              specified when sychronization time is too late
-      -E, --end_idx          The end frame index in LiDAR for processing, 
-                              specified when sychronization time is too early.
-      -VS, --voxel_size      The voxel filter parameter for TSDF fusion
-      --skip_frame           The everay n frame used for mapping
-      --tsdf                 Use VDB fusion to build the scene mesh 
-      --sdf_trunc            The trunction distance for SDF funtion
-      --sync                 Synced all data and save them in a pkl based on the params_file
-      ```
+1. Scene Mesh reconstruction (With TSDF fusion) and human data generation
+   ``` bash
+   python src/process_raw_data.py --root_folder $root_folder --tsdf --sync 
+   ```
+   optional arguments:
+   ```
+   --root_folder          The data's root directory
+   --traj_file  
+   --params_file  
+   -S, --start_idx        The start frame index in LiDAR for processing, 
+                           specified when sychronization time is too late
+   -E, --end_idx          The end frame index in LiDAR for processing, 
+                           specified when sychronization time is too early.
+   -VS, --voxel_size      The voxel filter parameter for TSDF fusion
+   --skip_frame           The everay n frame used for mapping
+   --tsdf                 Use VDB fusion to build the scene mesh 
+   --sdf_trunc            The trunction distance for SDF funtion
+   --sync                 Synced all data and save them in a pkl based on the params_file
+   ```
 
-   2. Human point clouds cropping
-      ```bash
-      python src/process_human_points.py -R $root_folder [--scene <scene path>]
+2. Human point clouds cropping
+   ```bash
+   python src/process_human_points.py -R $root_folder [--scene <scene path>]
       ```
 - ### **RGB data ** 
    Under `processing`, convert videos to images by:
