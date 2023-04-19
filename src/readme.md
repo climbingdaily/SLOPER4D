@@ -98,7 +98,33 @@ root_folder=/path/to/root_folder
 ## **Visualization**
 
 - ### **RGB visualization**
-   coming soon...
+   Under `processing`, convert videos to images by:
+
+    ```shell
+    python vdo2imgs.py --save_path "path to dataset"
+    ```
+
+    Visualize the labels: under `processing`: 
+
+1.  Download and place `SMPL_*.pkl` models in `processing/smpl_models`
+
+2.  Install [detectron2](https://github.com/facebookresearch/detectron2.git), [openGL](https://github.com/klintan/pypcd.git)
+
+3.  Change the project path and dataset path in `render_sence_base.sh`, then use `render_sence_all.sh` to generate videos under `rgb_datas`
+
+    ```shell
+    # in render_sence_base.sh
+    PROJ_PATH="path to code"
+    DATA_PATH="path to dataset"
+    ...
+    --draw_coco17 \				# visualize COCO17 skeleton
+    --draw_coco17_kps \		    # visualize COCO17 keypoints
+    --draw_smpl \				# visualize SMPL
+    --draw_human_pc \			# visualize human point cloud
+    --draw_scene_pc \			# visualize scene point cloud
+    ```
+
+
 
 
 - ### **SMPL visualization**
