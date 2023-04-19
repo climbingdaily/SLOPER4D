@@ -106,9 +106,11 @@ root_folder=/path/to/root_folder
 
     Visualize the labels: under `processing`: 
 
-1.   download and place `SMPL_*.pkl` models in `processing/smpl_models`
+1.  Download and place `SMPL_*.pkl` models in `processing/smpl_models`
 
-2.   Change the project path and dataset path in `render_sence_base.sh`, then use `render_sence_all.sh` for visualization
+2.  Install [detectron2](https://github.com/facebookresearch/detectron2.git), [openGL](https://github.com/klintan/pypcd.git)
+
+3.  Change the project path and dataset path in `render_sence_base.sh`, then use `render_sence_all.sh` to generate videos under `rgb_datas`
 
     ```shell
     # in render_sence_base.sh

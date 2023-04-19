@@ -17,7 +17,6 @@ import cv2
 import torch
 import smplx
 import trimesh
-from scipy.spatial.transform import Rotation
 
 
 import pickle
