@@ -45,8 +45,8 @@ pip install -r requirements.txt
 
 ## **Processing**
 ```bash
-root_folder=/path/to/root_folder
 seq_name=seq002_football_001
+root_folder=/path/to/sequence_folder
 ```
 
 - ### **Mocap data** 
@@ -85,13 +85,15 @@ seq_name=seq002_football_001
 
    Human point clouds cropping
    ```bash
-   python src/process_human_points.py -R $root_folder [--scene <scene path>]
+   python src/process_human_points.py -R $root_folder 
+   p
+   [--scene <scene path>]
    ```
 - ### **RGB data** 
    Convert the video to images frame by frame:
 
    ```shell
-   python visualization/vdo2imgs.py --save_path $root_folder
+   python src/vdo2imgs.py $root_folder
    ```
 
 ## **Data loader**
