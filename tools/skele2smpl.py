@@ -7,7 +7,6 @@
 ________________________,--._(___Y___)_,--._______________________
                         `--'           `--'
 '''
-# from .smpl import SMPL
 
 import numpy as np
 import math

@@ -12,7 +12,7 @@ from os.path import join
 
 SMPL_DIR = os.path.split(os.path.abspath( __file__))[0]
 
-SMPL_NEUTRAL = os.path.join(SMPL_DIR, 'SMPL_NEUTRA.pkl')
+SMPL_NEUTRAL = os.path.join(SMPL_DIR, 'SMPL_NEUTRAL.pkl')
 SMPL_FEMALE = os.path.join(SMPL_DIR, 'SMPL_FEMALE.pkl')
 SMPL_MALE = os.path.join(SMPL_DIR, 'SMPL_MALE.pkl')
 
