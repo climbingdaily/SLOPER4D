@@ -6,9 +6,10 @@
 
 1.  Install [detectron2](https://github.com/facebookresearch/detectron2.git), [pypenGL](https://github.com/mcfletch/pyopengl.git)
 
-2.  Change the project path and dataset path in `render_sence_base.sh`, then use `render_sence_all.sh` to generate videos under `rgb_datas`
+2.  Change the project path and dataset path in `render_sence_base.sh`.
 
     ```shell
+    ./render_sence_base.sh "seq002_football_001"
     # in render_sence_base.sh
     PROJ_PATH="path to code"
     DATA_PATH="path to dataset"
@@ -19,6 +20,13 @@
     --draw_human_pc \			# visualize human point cloud
     --draw_scene_pc \			# visualize scene point cloud
     ```
+
+3. Use the following command to generate videos under `rgb_datas`
+
+    ```shell
+    ./render_sence_base.sh "sequence name" # seq002_football_001 for example
+    ```
+
 
 
 
