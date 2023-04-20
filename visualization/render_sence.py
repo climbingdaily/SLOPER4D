@@ -22,7 +22,7 @@ import trimesh
 import pickle
 from Render import Renderer
 from Visualizer import HumanVisualizer
-from utils import *
+from vis_utils import *
 
 
 # for pyrender

@@ -23,7 +23,7 @@ from scipy.spatial.transform import Rotation as R
 from bvhtoolbox import Bvh  # pip install bvhtoolbox
 
 sys.path.append(os.path.dirname(os.path.split(os.path.abspath(__file__))[0]))
-from tools import save_json_file, read_json_file, MOCAP_INIT, load_csv_data
+from utils import save_json_file, read_json_file, MOCAP_INIT, load_csv_data
 
 
 def detect_jump(left_foot, right_foot, prominences = 0.2, width = 100):

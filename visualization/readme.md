@@ -14,6 +14,8 @@
     PROJ_PATH="path to code"
     DATA_PATH="path to dataset"
     ...
+    conda activate detectron    # change to your conda environment name
+    ...
     --draw_coco17 \				# visualize COCO17 skeleton
     --draw_coco17_kps \		    # visualize COCO17 keypoints
     --draw_smpl \				# visualize SMPL
