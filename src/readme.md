@@ -91,7 +91,7 @@ root_folder=/path/to/sequence_folder
    Convert the video to images frame by frame:
 
    ```shell
-   python src/vdo2imgs.py $root_folder
+   python src/vid2imgs.py $root_folder
    ```
 
 ## **Data loader**
