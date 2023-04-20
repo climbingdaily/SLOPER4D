@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.dirname(os.path.split(os.path.abspath( __file__))[0]))
 
 from smpl import SMPL, SMPL_Layer, SMPL_SAMPLE_PLY, COL_NAME
-from tools import get_pose_from_bvh, MOCAP_INIT, pypcd
+from utils import get_pose_from_bvh, MOCAP_INIT, pypcd
 
 def write_pcd(filepath, data, rgb=None, intensity=None, mode='wb') -> None:
     """

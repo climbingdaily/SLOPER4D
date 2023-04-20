@@ -24,8 +24,8 @@ import configargparse
 
 sys.path.append(dirname(split(abspath( __file__))[0]))
 
-from tools.tsdf_fusion_pipeline import VDBFusionPipeline
-from tools import poses_to_joints, mocap_to_smpl_axis, save_json_file, read_json_file, sync_lidar_mocap, load_csv_data
+from utils.tsdf_fusion_pipeline import VDBFusionPipeline
+from utils import poses_to_joints, mocap_to_smpl_axis, save_json_file, read_json_file, sync_lidar_mocap, load_csv_data
 
 field_fmts = ['%d', '%.6f', '%.6f', '%.6f', '%.6f', '%.6f', '%.6f', '%.6f', '%.3f']
 

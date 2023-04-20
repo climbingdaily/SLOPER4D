@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 sys.path.append('.')
 sys.path.append('..')
-from tools import pypcd
+from utils import pypcd
 
 COLORS_10 =[(144,238,144),(178, 34, 34),(221,160,221),(  0,255,  0),(  0,128,  0),(210,105, 30),(220, 20, 60),
             (192,192,192),(255,228,196),( 50,205, 50),(139,  0,139),(100,149,237),(138, 43,226),(238,130,238),

@@ -53,12 +53,12 @@ root_folder=/path/to/sequence_folder
    Convert the `bvh` file to `csv` files
    ```bash
    # pip install bvh-converter 
-   bvh-converter -r $root_folder/mocap_data/$seq_name\_second.bvh
+   bvh-converter -r $root_folder/mocap_data/${seq_name}_second.bvh
    ```
 
    Jumping peak detection. Used to double check the synchronization time in `dataset_params.json`
    ```bash
-   python tools/detect_jumps.py -M $root_folder/mocap_data/$seq_name\_second.bvh
+   python utils/detect_jumps.py -M $root_folder/mocap_data/$seq_name\_second.bvh
    ```
 
 - ### **LiDAR data** 

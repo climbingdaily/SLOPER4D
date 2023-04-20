@@ -25,7 +25,7 @@ import torch
 
 sys.path.append(os.path.dirname(os.path.split(os.path.abspath( __file__))[0]))
 
-from tools import filterTraj, erase_background, multi_func, save_ply, compute_similarity, poses_to_vertices_torch, select_visible_points, icp_mesh2point
+from utils import filterTraj, erase_background, multi_func, save_ply, compute_similarity, poses_to_vertices_torch, select_visible_points, icp_mesh2point
 
 def crop_scene(scene, positions, radius=1):
     """
