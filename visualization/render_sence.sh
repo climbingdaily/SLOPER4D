@@ -4,12 +4,12 @@
 PROJ_PATH="/home/lyt/github/SLOPER4D/"
 DATA_PATH="/wd8t/sloper4d_publish/"
 
-DATA_BASE=$DATA_PATH"$1/"
+DATA_BASE=$DATA_PATH"$1"
 scene=$1
 suffix='_render_sence'
 
 # environment
-cd $PROJ_PATH/processing/
+cd $PROJ_PATH/visualization/
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate detectron 
 
