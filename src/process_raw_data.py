@@ -278,7 +278,7 @@ def save_sync_data(root_folder, start=0, end=np.inf):
         joints, verts    = poses_to_joints(sync_pose[:1], return_verts=True) 
         feet_center      = (joints[0, 7] + joints[0, 8])/2
         feet_center[2]   = verts[..., 2].min()
-        trans      -= trans[0] + feet_center  # 使得第一帧位于原点
+        trans           -= trans[0] + feet_center  # make the first frame at the origin
 
         # 3. save synced data
         betas = np.array([0.0] * 10)
@@ -445,4 +445,4 @@ if __name__ == '__main__':
 # python process_raw_data.py --root_folder <root folder> [--tsdf] [--sync]
 # --tsdf,         building the scene mesh
 # --sync,         synchronize lidar and imu
-# --voxel_size,   synchronize lidar and imu
+# --voxel_size,   The voxel filter parameter for TSDF fusion

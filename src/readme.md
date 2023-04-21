@@ -38,10 +38,10 @@ conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=11
 pip install -r requirements.txt
 ```
 ## **Dependencies**
-- **SMPL**: Download v1.0.0 version SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl`, `SMPL_MALE.pkl` and `J_regressor_extra.npy` from http://smpl.is.tue.mpg.de and put them in `smpl` directory.
-- [**CSF**](https://github.com/jianboqi/CSF) (Optional)
+- **SMPL**: Download v1.0.0 version SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl`, `SMPL_MALE.pkl` and `J_regressor_extra.npy` from http://smpl.is.tue.mpg.de and put them in `smpl` directory
+- [detectron2](https://github.com/facebookresearch/detectron2.git) and [pypenGL](https://github.com/mcfletch/pyopengl.git) for visualization.
 - **FFmpeg** (version >= 3.4.11)
-
+- [**CSF**](https://github.com/jianboqi/CSF): Optional, used for ground segmentation
 
 ## **Processing**
 ```bash
@@ -88,10 +88,15 @@ root_folder=/path/to/sequence_folder
    python src/process_human_points.py -R $root_folder  
    ```
 - ### **RGB data** 
-   Convert the video to images frame by frame:
+   Convert the video to images in one sequence: 
 
    ```shell
    python src/vid2imgs.py $root_folder
+   ```
+
+   Convert the video to images for all sequence: 
+   ```shell
+   bash src/batch_vid2imgs.sh $(dirname "$root_folder")
    ```
 
 ## **Data loader**
