@@ -1,28 +1,24 @@
 #!/bin/bash
 
-# args
-PROJ_PATH="/home/lyt/github/SLOPER4D/"
-DATA_PATH="/wd8t/sloper4d_publish/"
+cd visualization
 
-DATA_BASE=$DATA_PATH"$1"
-scene=$1
-suffix='_render_sence'
+DATA_BASE=$1
+seq_name=$(basename $DATA_BASE)
+suffix='_render_scene'
 
-# environment
-cd $PROJ_PATH/visualization/
-source ~/anaconda3/etc/profile.d/conda.sh
-conda activate detectron 
+echo "Path in: $DATA_BASE"
+echo "Renderring sequence name: $seq_name"
 
 nohup \
     python render_scene.py \
-    --pkl_name          $scene \
+    --pkl_name          $seq_name \
     --base_path         $DATA_BASE \
-    --img_base_path     $DATA_BASE/rgb_data/$1"_imgs" \
+    --img_base_path     $DATA_BASE/rgb_data/${seq_name}"_imgs" \
     --scene_pc_base_path     $DATA_BASE/lidar_data/lidar_frames_rot \
     --draw_coco17 \
     --draw_coco17_kps \
     --draw_smpl \
     --draw_human_pc \
     --draw_scene_pc \
-> $DATA_BASE/rgb_data/$scene$suffix".log" \
+> $DATA_BASE/rgb_data/$seq_name$suffix".log" \
 2>&1 &
