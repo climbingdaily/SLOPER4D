@@ -88,10 +88,15 @@ root_folder=/path/to/sequence_folder
    python src/process_human_points.py -R $root_folder  
    ```
 - ### **RGB data** 
-   Convert the video to images frame by frame:
+   Convert the video to images in one sequence: 
 
    ```shell
    python src/vid2imgs.py $root_folder
+   ```
+
+   Convert the video to images for all sequence: 
+   ```shell
+   bash src/batch_vid2imgs.sh $(dirname "$root_folder")
    ```
 
 ## **Data loader**
