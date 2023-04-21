@@ -106,7 +106,7 @@ class SenceRender(object):
 
     def run(self):
         # cam_ex_pre = self.cam_ex
-        for idx in tqdm.tqdm(range(self.pkl_data['frame_num'])):
+        for idx in tqdm.tqdm(range(self.pkl_data['total_frames'])):
             img_path = os.path.join(self.img_base_path, self.pkl_data['RGB_frames']['file_basename'][idx])
             cam_pose = self.pkl_data['RGB_frames']['cam_pose'][idx]
             cam_ex = np.array(self.pkl_data['RGB_frames']['extrinsic'][idx])
@@ -176,11 +176,12 @@ class SenceRender(object):
             if self.draw_scene_pc:
                 pc_path = os.path.join(self.scene_pc_base_path, self.pkl_data['RGB_frames']['lidar_fname'][idx])
                 im = cv2.imread(img_path)
-                sence_pc = read_pcd_with_color(pc_path) # FIXME: !!!!! x<0 is cutted out !!!!!
-                sence_pc[:,:3] = sence_pc[:,:3]@cam_ex[:3,:3].T + cam_ex[:3,-1].T
+                sence_pc = read_pcd_with_color(pc_path)
+                sence_pc[:,:3] = sence_pc[:,:3]@cam_pose[:3,:3].T + cam_pose[:3,-1].T
                 sence_pixel_pc = camera_to_pixel(sence_pc[:,:3], self.cam_in, self.cam_dist)
                 im = draw_pc2image(im, sence_pixel_pc, sence_pc[:, 3:])
                 self.scene_pc_vdo.write(im)
+            cv2.imwrite("/home/lyt/github/SLOPER4D/tmp.jpg", im)
 
 def parse_args():
     parser = argparse.ArgumentParser()

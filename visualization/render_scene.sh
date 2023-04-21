@@ -14,7 +14,7 @@ source ~/anaconda3/etc/profile.d/conda.sh
 conda activate detectron 
 
 nohup \
-    python render_sence.py \
+    python render_scene.py \
     --pkl_name          $scene \
     --base_path         $DATA_BASE \
     --img_base_path     $DATA_BASE/rgb_data/$1"_imgs" \

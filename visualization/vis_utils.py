@@ -125,7 +125,7 @@ def read_pcd_with_color(pcd_file, color_fmt="depth", filterx=True):
         rgb = pypcd.decode_rgb_from_pcl(pc_pcd.pc_data['rgb'])/255
     assert(rgb is not None), "RGB is None!!"
     pc = np.concatenate((pc, rgb), axis=1)
-    if filterx: pc = pc[pc[:, 0] > 0]
+    # if filterx: pc = pc[pc[:, 1] > 0]
     return pc
 
 def read_pcd(pcd_file, color_fmt="depth"):
