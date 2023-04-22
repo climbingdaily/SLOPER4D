@@ -19,6 +19,6 @@ nohup \
     --draw_coco17_kps \
     --draw_smpl \
     --draw_human_pc \
-    --draw_scene_pc \
 > $DATA_BASE/rgb_data/$seq_name$suffix".log" \
 2>&1 &
+    # --draw_scene_pc \

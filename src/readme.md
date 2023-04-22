@@ -34,12 +34,12 @@ git clone https://github.com/climbingdaily/SLOPER4D.git
 ```bash
 conda create --name sloper4d python==3.8 -y
 conda activate sloper4d
-conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=11.0 -c pytorch
+conda install pytorch==1.8.0 torchvision==0.8.0 torchaudio==0.8.0 cudatoolkit=11.0 -c pytorch
 pip install -r requirements.txt
 ```
 ## **Dependencies**
 - **SMPL**: Download v1.0.0 version SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl`, `SMPL_MALE.pkl` and `J_regressor_extra.npy` from http://smpl.is.tue.mpg.de and put them in `smpl` directory
-- [detectron2](https://github.com/facebookresearch/detectron2.git) and [pypenGL](https://github.com/mcfletch/pyopengl.git) for visualization.
+- Install [detectron2](https://github.com/facebookresearch/detectron2.git) and [pypenGL](https://github.com/mcfletch/pyopengl.git), then update pyopengl to 3.1.4 by `pip install --upgrade pyopengl==3.1.4` for visualization. 
 - **FFmpeg** (version >= 3.4.11)
 - [**CSF**](https://github.com/jianboqi/CSF): Optional, used for ground segmentation
 
