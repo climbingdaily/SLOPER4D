@@ -4,13 +4,13 @@ cd visualization
 
 DATA_BASE=$1
 seq_name=$(basename $DATA_BASE)
-suffix='_render_sence'
+suffix='_render_scene'
 
 echo "Path in: $DATA_BASE"
 echo "Renderring sequence name: $seq_name"
 
 nohup \
-    python render_sence.py \
+    python render_scene.py \
     --pkl_name          $seq_name \
     --base_path         $DATA_BASE \
     --img_base_path     $DATA_BASE/rgb_data/${seq_name}"_imgs" \
