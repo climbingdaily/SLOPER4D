@@ -25,8 +25,8 @@
   <a href="https://arxiv.org/pdf/2303.09095.pdf">
     <img src='https://img.shields.io/badge/ArXiv-green?style=for-the-badge&logo=adobeacrobatreader&logoWidth=20&logoColor=white&labelColor=c94330&color=db5a44' alt='Paper PDF'>
   </a>
-  <a href="">
-    <img src='https://img.shields.io/badge/Dataset (Coming soon)-lightgrey?style=for-the-badge' alt='Dataset (Coming soon)...'>
+  <a href="http://www.lidarhumanmotion.net/data-sloper4d/">
+    <img src='https://img.shields.io/badge/Dataset-success?style=for-the-badge' alt='Dataset (Coming soon)...'>
   </a>
   <a href='http://www.lidarhumanmotion.net/sloper4d/'>
     <img src='https://img.shields.io/badge/Homepage-orange?style=for-the-badge&logo=Google%20chrome&logoColor=white&labelColor=D35400' alt='Project Page'></a>
@@ -48,6 +48,7 @@
 
 ## News and Updates
 - *More info is coming soon…*
+- **04/2023**: First part of the dataset V1.0 has released! ([Dataset](http://www.lidarhumanmotion.net/data-sloper4d/))
 - **03/2023**: Initial release of the visualization Tool ([SMPL-Scene Viewer](https://github.com/climbingdaily/SMPL-Scene-Viewer)) (v1.0)
 
 <br>
@@ -89,10 +90,10 @@
 | 015 | plaza_001    | 365              | 2,700            | 7,989  | Admiring sculptures, eating    |   
 
 ## Data processing
-Please see [readme](./src/readme.md). 
+Please see [processing pipeline](./src/readme.md). 
 
 ## Visualization
-Please see [readme](./visualization/readme.md).
+Please see [visualization script](./visualization/readme.md).
 
 ## More qualitative results
 - Comparison between **IMU + ICP** and **our optimization** results.
