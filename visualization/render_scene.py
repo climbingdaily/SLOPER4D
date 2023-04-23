@@ -217,7 +217,7 @@ def parse_args():
         help='draw scene point cloud to images and save as video.')
     # smpl
     parser.add_argument('--smpl_model_path', 
-        type=str, default="../smpl",
+        type=str, default="../",
         help='path to SMPL models')
     parser.add_argument('--wireframe', 
         type=bool, default=False,
