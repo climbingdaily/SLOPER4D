@@ -42,7 +42,8 @@ class Vid2imgs:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root_folder", type=str)
+    parser.add_argument("root_folder", type=str, 
+                        help="The sequence folder path")
     return parser.parse_args() 
             
 if __name__ == '__main__':

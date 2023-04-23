@@ -21,7 +21,7 @@
 
 ## **Environment**
 - Python 3.8.12
-- PyTorch 1.7.0
+- PyTorch >= 1.8.0
 - CUDA 11.0
 - Ubuntu 18.04
 
@@ -105,5 +105,5 @@ coming soon...
 
 
 ## **License**
-The SLOPER4D dataset is published under the Creative [Commons Attribution-NonCommercial-ShareAlike 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) License. You must attribute the work in the manner specified by the authors, you may not use this work for commercial purposes and if you alter, transform, or build upon this work, you may distribute the resulting work only under the same license. Contact us if you are interested in commercial usage.
+The SLOPER4D code is published under the Creative [Commons Attribution-NonCommercial-ShareAlike 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) License. You must attribute the work in the manner specified by the authors, you may not use this work for commercial purposes and if you alter, transform, or build upon this work, you may distribute the resulting work only under the same license. Contact us if you are interested in commercial usage.
 
