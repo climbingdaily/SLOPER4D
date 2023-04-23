@@ -6,7 +6,7 @@ root_folder = os.path.abspath(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 sys.path.append(root_folder)
-
+# for pyrender
 os.environ['PYOPENGL_PLATFORM'] = 'osmesa' # or egl
 
 import time
@@ -25,9 +25,6 @@ import pickle
 from Render import Renderer
 from Visualizer import HumanVisualizer
 from vis_utils import *
-
-
-# for pyrender
 
 
 class SenceRender(object):
@@ -182,7 +179,6 @@ class SenceRender(object):
                 sence_pixel_pc = camera_to_pixel(sence_pc[:,:3], self.cam_in, self.cam_dist)
                 im = draw_pc2image(im, sence_pixel_pc, sence_pc[:, 3:])
                 self.scene_pc_vdo.write(im)
-            cv2.imwrite("/home/lyt/github/SLOPER4D/tmp.jpg", im)
 
 def parse_args():
     parser = argparse.ArgumentParser()
