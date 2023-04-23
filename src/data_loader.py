@@ -52,19 +52,15 @@ class SLOPER4D_Dataset(Dataset):
             'beta'         : torch.tensor(self.beta[index]).float().to(self.device),
             'human_points' : torch.tensor(self.human_points[index]).float().to(self.device),
         }
-        mispart    = ''
-        is_missing = False
-        if len(sample['human_points']) < 1:
-            mispart += 'pts '
-            is_missing = True
-        if len(sample['bbox']) < 1:
-            mispart += 'box '
-            is_missing = True
-        if len(sample['skel_2d']) < 1:
-            mispart += '2d '
-            is_missing = True
-        if is_missing:
+
+        mispart = ''
+        mispart += 'box ' if len(sample['bbox']) < 1 else ''
+        mispart += 's2d ' if len(sample['skel_2d']) < 1 else ''
+        mispart += 'pts ' if len(sample['human_points']) < 1 else ''
+           
+        if len(mispart) > 0:
             print(f'Missing {mispart} in: {index} ')
+
         return sample
     
     def __len__(self):
