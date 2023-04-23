@@ -44,7 +44,8 @@ pip install -r requirements.txt
    ```bash
    pip install --upgrade pyopengl==3.1.4 # update pyopengl to 3.1.4
    # recommend install it from a local clone
-   git clone https://github.com/facebookresearch/detectron2.gitpython -m pip install -e detectron2
+   git clone https://github.com/facebookresearch/detectron2.git
+   python -m pip install -e detectron2
    ```
 - [FFmpeg](https://ffmpeg.org/download.html) (version >= 3.4.11)
 - (Optional) [CSF](https://github.com/jianboqi/CSF): used for ground segmentation

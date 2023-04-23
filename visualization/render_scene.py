@@ -7,6 +7,8 @@ root_folder = os.path.abspath(
 )
 sys.path.append(root_folder)
 
+os.environ['PYOPENGL_PLATFORM'] = 'osmesa' # or egl
+
 import time
 import tqdm
 import argparse
@@ -26,7 +28,6 @@ from vis_utils import *
 
 
 # for pyrender
-os.environ['PYOPENGL_PLATFORM'] = 'osmesa' # or egl
 
 
 class SenceRender(object):
