@@ -21,7 +21,7 @@
 
 ## **Environment**
 - Python 3.8.12
-- PyTorch 1.7.0
+- PyTorch >= 1.8.0
 - CUDA 11.0
 - Ubuntu 18.04
 
