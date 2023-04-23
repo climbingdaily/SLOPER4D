@@ -107,8 +107,10 @@ root_folder=/path/to/sequence_folder
    ```
 
 ## **Data loader**
-coming soon...
-
+Here is a testing example of dataloader, you can import the `SLOPER4D_Dataset` class in your code.
+```bash
+python src/data_loader.py --pkl $root_folder/${seq_name}_labels.pkl
+```
 
 
 ## **License**
