@@ -38,10 +38,17 @@ conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=11
 pip install -r requirements.txt
 ```
 ## **Dependencies**
-- **SMPL**: Download v1.0.0 version SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl`, `SMPL_MALE.pkl` and `J_regressor_extra.npy` from http://smpl.is.tue.mpg.de and put them in `smpl` directory
-- Install [detectron2](https://github.com/facebookresearch/detectron2.git) and [pypenGL](https://github.com/mcfletch/pyopengl.git), then update pyopengl to 3.1.4 by `pip install --upgrade pyopengl==3.1.4` for visualization. 
-- **FFmpeg** (version >= 3.4.11)
-- [**CSF**](https://github.com/jianboqi/CSF): Optional, used for ground segmentation
+- SMPL: Download v1.0.0 SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl` and `SMPL_MALE.pkl` from http://smpl.is.tue.mpg.de and put them in `./smpl/smpl` directory
+- Install [detectron2](https://github.com/facebookresearch/detectron2.git) and update [pypenGL](https://github.com/mcfletch/pyopengl.git)
+
+   ```bash
+   pip install --upgrade pyopengl==3.1.4 # update pyopengl to 3.1.4
+   # recommend install it from a local clone
+   git clone https://github.com/facebookresearch/detectron2.git
+   python -m pip install -e detectron2
+   ```
+- [FFmpeg](https://ffmpeg.org/download.html) (version >= 3.4.11)
+- (Optional) [CSF](https://github.com/jianboqi/CSF): used for ground segmentation
 
 ## **Processing**
 ```bash
@@ -100,8 +107,10 @@ root_folder=/path/to/sequence_folder
    ```
 
 ## **Data loader**
-coming soon...
-
+Here is a testing example of dataloader, you can import the `SLOPER4D_Dataset` class in your code.
+```bash
+python src/data_loader.py --pkl $root_folder/${seq_name}_labels.pkl
+```
 
 
 ## **License**

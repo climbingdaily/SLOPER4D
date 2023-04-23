@@ -6,7 +6,6 @@ numpy==1.23.5
 open3d==0.17.0
 opencv_python==4.6.0.66
 pandas==1.3.3
-pyrender==0.1.45
 python_lzf==0.2.4
 scipy==1.9.1
 smplx==0.1.28
@@ -16,4 +15,5 @@ smplx==0.1.28
 pyquaternion==0.9.9
 pyrender==0.1.45
 trimesh==3.15.3
+bvh-converter==1.0.2
 pyopengl-accelerate==3.1.6

@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 
 .vscode
-smpl/*.pkl
+*.pkl
 smpl/*.npy
+/detectron2

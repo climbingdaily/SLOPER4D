@@ -12,11 +12,9 @@ from os.path import join
 
 SMPL_DIR = os.path.split(os.path.abspath( __file__))[0]
 
-SMPL_NEUTRAL = os.path.join(SMPL_DIR, 'SMPL_NEUTRAL.pkl')
-SMPL_FEMALE = os.path.join(SMPL_DIR, 'SMPL_FEMALE.pkl')
-SMPL_MALE = os.path.join(SMPL_DIR, 'SMPL_MALE.pkl')
-
-JOINT_REGRESSOR_TRAIN_EXTRA = os.path.join(SMPL_DIR, 'J_regressor_extra.npy')
+SMPL_NEUTRAL = os.path.join(SMPL_DIR, 'smpl', 'SMPL_NEUTRAL.pkl')
+SMPL_FEMALE = os.path.join(SMPL_DIR, 'smpl', 'SMPL_FEMALE.pkl')
+SMPL_MALE = os.path.join(SMPL_DIR, 'smpl', 'SMPL_MALE.pkl')
 
 SMPL_SAMPLE_PLY = os.path.join(SMPL_DIR, 'smpl_sample.ply')
 
