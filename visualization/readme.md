@@ -2,7 +2,7 @@
 
 ## **RGB visualization**
 
-1. Follow the installation instruction in [installation instruction](../src/readme.md)
+1. Follow the [installation instruction](../src/readme.md)
 3. Render all annotations on videos:
     ```shell
     root_folder=/path/to/sequence_folder
