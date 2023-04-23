@@ -38,7 +38,7 @@ conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=11
 pip install -r requirements.txt
 ```
 ## **Dependencies**
-- **SMPL**: Download v1.0.0 version SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl`, `SMPL_MALE.pkl` and `J_regressor_extra.npy` from http://smpl.is.tue.mpg.de and put them in `smpl` directory
+- **SMPL**: Download v1.0.0 version SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl` and `SMPL_MALE.pkl` from http://smpl.is.tue.mpg.de and put them in `smpl/smpl` directory
 - Install [detectron2](https://github.com/facebookresearch/detectron2.git) and [pypenGL](https://github.com/mcfletch/pyopengl.git), then update pyopengl to 3.1.4 by `pip install --upgrade pyopengl==3.1.4` for visualization. 
 - **FFmpeg** (version >= 3.4.11)
 - [**CSF**](https://github.com/jianboqi/CSF): Optional, used for ground segmentation

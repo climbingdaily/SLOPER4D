@@ -31,19 +31,19 @@ os.environ['PYOPENGL_PLATFORM'] = 'osmesa' # or egl
 
 class SenceRender(object):
     def __init__(self, args):
-        self.draw_coco17 = args.draw_coco17
-        self.draw_smpl = args.draw_smpl
-        self.draw_human_pc = args.draw_human_pc
-        self.draw_scene_pc = args.draw_scene_pc
+        self.draw_coco17     = args.draw_coco17
+        self.draw_smpl       = args.draw_smpl
+        self.draw_human_pc   = args.draw_human_pc
+        self.draw_scene_pc   = args.draw_scene_pc
         self.draw_coco17_kps = args.draw_coco17_kps
-        self.save_path = args.base_path
-        self.save_path = os.path.join(args.base_path, "rgb_data")
+        self.save_path       = args.base_path
+        self.save_path       = os.path.join(args.base_path, "rgb_data")
         with open(os.path.join(args.base_path, args.pkl_name+"_labels.pkl"), 'rb') as f:
             self.pkl_data = pickle.load(f)
         self.frame_dev = 1 / self.pkl_data['LiDAR_info']['fps'] / 2
         self.R1 = trimesh.transformations.rotation_matrix(math.radians(180), [1, 0, 0])
         # FIXME
-        self.img_base_path = args.img_base_path
+        self.img_base_path      = args.img_base_path
         self.scene_pc_base_path = args.scene_pc_base_path
         self._load_cam_info()
         ### FIXME: for test

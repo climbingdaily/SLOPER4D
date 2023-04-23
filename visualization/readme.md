@@ -6,7 +6,7 @@
 3. Render all annotations on videos:
     ```shell
     root_folder=/path/to/sequence_folder
-    bash ./visualization/render_sence.sh $root_folder
+    bash ./visualization/render_scene.sh $root_folder
     ```
     Some parameters explaination in `render_sence.sh`：
 

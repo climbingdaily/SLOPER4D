@@ -29,11 +29,11 @@ class SMPL_Layer(Module):
         self.gender = gender
 
         if gender == 'neutral':
-            self.model_path = os.path.join(model_root, 'SMPL_NEUTRAL.pkl')
+            self.model_path = os.path.join(model_root, 'smpl', 'SMPL_NEUTRAL.pkl')
         elif gender == 'female':
-            self.model_path = os.path.join(model_root, 'SMPL_FEMELE.pkl')
+            self.model_path = os.path.join(model_root, 'smpl', 'SMPL_FEMELE.pkl')
         elif gender == 'male':
-            self.model_path = os.path.join(model_root, 'SMPL_MALE.pkl')
+            self.model_path = os.path.join(model_root, 'smpl', 'SMPL_MALE.pkl')
 
         smpl_data = ready_arguments(self.model_path)
         self.smpl_data = smpl_data
