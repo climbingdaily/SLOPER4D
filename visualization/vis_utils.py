@@ -194,3 +194,82 @@ def draw_pc2mask(mask, pc, size=1):
         y = np.floor(y).astype(int)
         if _valid(x, y): _draw_chunk(x, y)
     return mask
+
+
+def world_to_camera(X, extrinsic_matrix):
+    n = X.shape[0]
+    X = np.concatenate((X, np.ones((n, 1))), axis=-1).T
+    X = np.dot(extrinsic_matrix, X).T
+    return X[..., :3]
+
+def plot_points_on_img(img_path, 
+                       points3d, 
+                       extrinsic, 
+                       intrinsic,
+                       dist=np.zeros(5), 
+                       colors=None, 
+                       max_depth=15, 
+                       save_img=False):
+    """
+    This function takes in an image, 3D points, camera extrinsic and intrinsic parameters, and projects
+    the 3D points onto the image and saves the resulting image.
+    
+    Args:
+      img_path: The file path of the image on which the points will be plotted.
+      points3d: A numpy array of shape (N, 3) representing N 3D points in world coordinates.
+      extrinsic: The extrinsic matrix represents the position and orientation of the camera in the world
+    coordinate system. It is a 3x4 matrix that combines the rotation and translation of the camera.
+      intrinsic: The intrinsic matrix of the camera, which contains information about the focal length,
+    principal point, and skew. It is used to convert 3D points in camera coordinates to 2D pixel
+    coordinates.
+      dist: The distortion coefficients of the camera used to capture the image.
+      colors: An optional array of colors for each point in the 3D space. If provided, the colors will
+    be used to color the points in the image. If not provided, a default color map will be used based on
+    the depth of each point.
+      max_depth: The maximum depth value for the points to be plotted. Points with depth values greater
+    than this will not be plotted. Defaults to 15
+    """
+
+    img = cv2.imread(img_path)
+
+    camera_points = world_to_camera(points3d, extrinsic)
+    if colors is not None:
+        colors = colors[camera_points[:, 2] > 0]
+    camera_points = camera_points[camera_points[:, 2] > 0]
+    pixel_points  = camera_to_pixel(camera_points, intrinsic, dist)
+    pixel_points  = np.round(pixel_points).astype(np.int32)
+
+    rule1 = pixel_points[:, 0] >= 0
+    rule2 = pixel_points[:, 0] < img.shape[1]
+    rule3 = pixel_points[:, 1] >= 0
+    rule4 = pixel_points[:, 1] < img.shape[0]
+    rule  = [a and b and c and d for a, b, c, d in zip(rule1, rule2, rule3, rule4)]
+
+    camera_points = camera_points[rule]
+    pixel_points  = pixel_points[rule]
+    depth         = np.linalg.norm(camera_points, axis=1)
+    
+    if colors is not None:
+        colors = colors[rule]
+    else:
+        colors = plt.get_cmap('hsv')(depth / max_depth)[:, :3] * 255
+
+    for d, color, (x, y) in zip(depth, colors, pixel_points):
+        if d > 0.5:
+            cv2.circle(img, (x, y), 1, color=color, thickness=-1)
+            
+    if save_img:
+        save_img_path = f"{os.path.splitext(img_path)[0]}_proj.jpg"
+        cv2.imwrite(save_img_path, img)
+        print(f"Image saved to {save_img_path}")
+
+        img_title = 'Points overlay'
+
+        cv2.imshow(img_title, img)
+        while cv2.getWindowProperty(img_title, cv2.WND_PROP_VISIBLE) > 0:
+            cv2.imshow(img_title, img)
+            key = cv2.waitKey(100)
+            if key == 27:  # Press 'Esc'
+                break
+
+    return img
