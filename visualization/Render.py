@@ -45,16 +45,19 @@ class Renderer:
 
     def render(self, img, smpl_model, cam, human_pc=None, sence_pc_pose=None, mesh_filename=None, color=[1.0, 1.0, 0.9]):
         # SMPL
-        verts, faces = smpl_model
-        vertex_colors = np.ones([verts.shape[0], 4]) * [0.3, 0.3, 0.3, 0.8]
-        smpl_mesh = trimesh.Trimesh(verts, faces, vertex_colors=vertex_colors)
+        verts, faces  = smpl_model
+        # vertex_colors = np.ones([verts.shape[0], 4]) * [color[0], color[1], color[2], 0.8]
+        smpl_mesh     = trimesh.Trimesh(verts, faces)
         if mesh_filename is not None:
             smpl_mesh.export(mesh_filename)
+
         material = pyrender.MetallicRoughnessMaterial(
             metallicFactor=0.0,
             alphaMode='OPAQUE',
-            baseColorFactor=(color[0], color[1], color[2], 1.0)
+            roughnessFactor=0.7,
+            baseColorFactor=(color[2], color[1], color[0], 1.0)
         )
+
         smpl_mesh = pyrender.Mesh.from_trimesh(smpl_mesh, material=material)
         # PointCloud
         if human_pc is not None:

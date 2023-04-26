@@ -26,23 +26,23 @@ import matplotlib.pyplot as plt
 import pickle
 from Render import Renderer
 from Visualizer import HumanVisualizer
-from vis_utils import test_opencv_video_format, draw_skel2image, plot_points_on_img
+from vis_utils import test_opencv_video_format, draw_skel2image, plot_points_on_img, extrinsic_to_cam
 from utils import load_point_cloud
 
 from src import  SLOPER4D_Loader
 
 class SenceRender(object):
     def __init__(self, args, model_type='smpl'):
-        self.draw_coco17        = args.draw_coco17
-        self.draw_smpl          = args.draw_smpl
-        self.draw_human_pc      = args.draw_human_pc
-        self.draw_scene_pc      = args.draw_scene_pc
-        self.draw_coco17_kps    = args.draw_coco17_kps
-        self.save_path          = os.path.join(args.base_path, "rgb_data")
-        self.img_base_path      = args.img_base_path
-        self.scene_pc_base_path = args.scene_pc_base_path
-        _basename               = args.pkl_name
-        out_base_dir            = os.path.join(self.save_path, _basename)
+        _basename            = args.pkl_name
+        out_base_dir         = os.path.join(args.base_path, "rgb_data", _basename)
+        self.img_base_path   = os.path.join(args.base_path, "rgb_data", f"{_basename}_imgs")
+        self.pc_base_path    = os.path.join(args.base_path, "lidar_data", "lidar_frames_rot")
+                                            
+        self.draw_coco17     = args.draw_coco17
+        self.draw_smpl       = args.draw_smpl
+        self.draw_human_pc   = args.draw_human_pc
+        self.draw_scene_pc   = args.draw_scene_pc
+        self.draw_coco17_kps = args.draw_coco17_kps
 
         self.sequence  = SLOPER4D_Loader(os.path.join(args.base_path, _basename+"_labels.pkl"), return_torch=False)
 
@@ -51,8 +51,6 @@ class SenceRender(object):
         self.cam_dist  = self.sequence.rgb_dist
         self.im_width  = self.sequence.rgb_width
         self.im_height = self.sequence.rgb_height
-
-        self.R1 = trimesh.transformations.rotation_matrix(math.radians(180), [1, 0, 0])
 
         # prepare files for visualization
         os.makedirs(out_base_dir, exist_ok=True)
@@ -82,7 +80,7 @@ class SenceRender(object):
                                        use_face_contour=False,
                                        ext="npz")
         
-        self.smpl_color = np.array([147/255, 58/255, 189/255]) # colorsys.hsv_to_rgb(np.random.rand(), 0.5, 1.0)
+        self.smpl_color = np.array([228/255, 60/255, 60/255]) # colorsys.hsv_to_rgb(np.random.rand(), 0.5, 1.0)
 
     def _prepare_output_(self, save_path, basename, fps=0, w=0, h=0):
         fps = self.sequence.rgb_fps if fps == 0 else fps
@@ -123,7 +121,7 @@ class SenceRender(object):
     def run(self):
         for sample in tqdm.tqdm(self.sequence):
             img_path = os.path.join(self.img_base_path, sample['file_basename'])
-            cam_pose = sample['cam_pose']
+            extrinsic = sample['cam_pose']
             
             # smpl
             if self.draw_smpl:
@@ -137,16 +135,11 @@ class SenceRender(object):
                                                 transl=sample['global_trans'].reshape(-1,3))
                     
                     smpl_verts  = smpl_md.vertices.detach().cpu().numpy().squeeze()
-                    # smpl_joints = smpl_md.joints.detach().cpu().numpy().squeeze()
                     
-                    view_matrix = np.eye(4)
-                    view_matrix[:3, :3] = cam_pose[:3, :3].T @ self.R1[:3,:3]
-                    view_matrix[:3, -1] = -cam_pose[:3, :3].T @ cam_pose[:3,-1]
-
                     img = self.renderer.render(
                         img,
                         smpl_model    = (smpl_verts, self.human_model.faces),
-                        cam           = (self.cam_in, view_matrix),
+                        cam           = (self.cam_in, extrinsic_to_cam(extrinsic)),
                         color         = self.smpl_color,
                         human_pc      = None,
                         sence_pc_pose = None,
@@ -159,8 +152,7 @@ class SenceRender(object):
                 img = cv2.imread(img_path)
                 if len(sample['bbox']) != 0: 
                     img = self.visualizer.draw_predicted_humans(
-                        img, 
-                        [0, ], # id 
+                        img, [0, ], # id 
                         np.array([sample['bbox'], ]),
                         np.array([sample['skel_2d'], ]))
                 self.coco17_.write(img)
@@ -176,36 +168,34 @@ class SenceRender(object):
             # human pc 
             if self.draw_human_pc:
                 if len(sample['human_points']) != 0:
-                    human_pc = np.array(sample['human_points'])
-                    img = plot_points_on_img(img_path, human_pc, cam_pose, self.cam_in, self.cam_dist)
+                    img = plot_points_on_img(img_path, 
+                                             np.array(sample['human_points']), 
+                                             extrinsic, 
+                                             self.cam_in, 
+                                             self.cam_dist)
                 else:
                     img = cv2.imread(img_path)
                 self.human_pc_.write(img)
 
             # scene point cloud
             if self.draw_scene_pc:
-                img      = cv2.imread(img_path)
                 pcd_name = f"{sample['lidar_tstamps']:.03f}".replace('.', '_') + '.pcd'
-                pc_path  = os.path.join(self.scene_pc_base_path, pcd_name)
+                pc_path  = os.path.join(self.pc_base_path, pcd_name)
                 sence_pc = load_point_cloud(pc_path)
                 img      = plot_points_on_img(img_path, 
                                               np.asarray(sence_pc.points), 
-                                              cam_pose, 
+                                              extrinsic, 
                                               self.cam_in, 
-                                            #   self.cam_dist,
+                                              # self.cam_dist,
                                               )
-
                 self.scene_pc_.write(img)
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--pkl_name", type=str, required=True, help="xxx")
     parser.add_argument('--base_path', type=str, required=True,
-                        help='path to scene files')
-    parser.add_argument('--img_base_path', type=str, required=True,
-                        help='path to image files')
-    parser.add_argument('--scene_pc_base_path', type=str, required=True,
-                        help='path to scene point cloud files')
+                        help='path to sequence folder')
+    
     parser.add_argument('--draw_coco17', action='store_true',
                         help='draw COCO17 to images and save as video.')
     parser.add_argument('--draw_coco17_kps', action='store_true',

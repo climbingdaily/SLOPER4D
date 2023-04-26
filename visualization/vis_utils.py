@@ -85,7 +85,26 @@ def test_opencv_video_format(codec, file_ext):
             return True
         return False
 
+def extrinsic_to_cam(extrinsic):
+    cam = np.eye(4)
+    cam[:3, :3] = extrinsic[:3, :3].T @ np.array([[1,0,0],[0,-1,0],[0,0,-1]])
+    cam[:3, 3] = -(extrinsic[:3, :3].T @ extrinsic[:3, 3])
+    return cam
 
+def cam_to_extrinsic(cam):
+    """
+    It takes a camera matrix and returns the extrinsic matrix
+    
+    Args:
+      cam: the camera matrix
+    
+    Returns:
+      The extrinsic matrix
+    """
+    extrinsic = np.eye(4)
+    extrinsic[:3, :3] = np.array([[1,0,0],[0,-1,0],[0,0,-1]]) @ cam[:3, :3].T
+    extrinsic[:3, 3] = -(extrinsic[:3, :3] @ cam[:3, 3])
+    return extrinsic
 
 ### point cloud ###
 
