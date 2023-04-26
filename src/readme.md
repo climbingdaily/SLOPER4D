@@ -19,10 +19,10 @@
 ```
 
 
-## **Environment**
+## **Tested Environment**
 - Python 3.8.12
 - PyTorch >= 1.8.0
-- CUDA 11.0
+- CUDA 11.1
 - Ubuntu 18.04
 
 ## **Installation**
@@ -34,7 +34,7 @@ git clone https://github.com/climbingdaily/SLOPER4D.git
 ```bash
 conda create --name sloper4d python==3.8 -y
 conda activate sloper4d
-conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=11.0 -c pytorch
+pip install torch==1.10.0+cu111 torchvision==0.11.0+cu111 torchaudio==0.10.0 -f https://download.pytorch.org/whl/torch_stable.html  # cpu-only version is ok for visualization and processing
 pip install -r requirements.txt
 ```
 ## **Dependencies**
