@@ -3,12 +3,18 @@
 ## **RGB visualization**
 
 1. Follow the [installation instruction](../src/readme.md)
-3. Render all annotations on videos:
+3. Run
+    - Render annotations to all frames and save them to a video:
     ```shell
     root_folder=/path/to/sequence_folder
     bash ./visualization/render_scene.sh $root_folder
     ```
-    Some parameters explaination in `render_sence.sh`：
+    - Render annotations to the 666 frame and save it to a image:
+
+    ```shell
+    bash ./visualization/render_scene.sh $root_folder 666
+    ```
+    - Some parameters in `render_sence.sh`：
 
     ```shell
         --draw_coco17 \				# visualize COCO17 skeleton

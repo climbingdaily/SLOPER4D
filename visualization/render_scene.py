@@ -14,16 +14,12 @@ import tqdm
 import argparse
 import warnings
 
-import math
 import cv2
 import torch
 import smplx
-import trimesh
 
 import numpy as np
-import matplotlib.pyplot as plt
 
-import pickle
 from Render import Renderer
 from Visualizer import HumanVisualizer
 from vis_utils import test_opencv_video_format, draw_skel2image, plot_points_on_img, extrinsic_to_cam
@@ -33,9 +29,9 @@ from src import  SLOPER4D_Loader
 
 class SenceRender(object):
     def __init__(self, args, model_type='smpl'):
-        _basename            = args.pkl_name
-        out_base_dir         = os.path.join(args.base_path, "rgb_data", _basename)
-        self.img_base_path   = os.path.join(args.base_path, "rgb_data", f"{_basename}_imgs")
+        self.seq_name        = os.path.basename(args.base_path)
+        self.rgb_base        = os.path.join(args.base_path, "rgb_data", self.seq_name)
+        self.img_base_path   = os.path.join(args.base_path, "rgb_data", f"{self.seq_name}_imgs")
         self.pc_base_path    = os.path.join(args.base_path, "lidar_data", "lidar_frames_rot")
                                             
         self.draw_coco17     = args.draw_coco17
@@ -44,7 +40,8 @@ class SenceRender(object):
         self.draw_scene_pc   = args.draw_scene_pc
         self.draw_coco17_kps = args.draw_coco17_kps
 
-        self.sequence  = SLOPER4D_Loader(os.path.join(args.base_path, _basename+"_labels.pkl"), return_torch=False)
+        self.sequence  = SLOPER4D_Loader(os.path.join(args.base_path, self.seq_name+"_labels.pkl"), 
+                                         return_torch=False)
 
         # camera information
         self.cam_in    = self.sequence.rgb_intrinsics
@@ -53,24 +50,26 @@ class SenceRender(object):
         self.im_height = self.sequence.rgb_height
 
         # prepare files for visualization
-        os.makedirs(out_base_dir, exist_ok=True)
+        os.makedirs(self.rgb_base, exist_ok=True)
         if self.draw_coco17:
             self.visualizer = HumanVisualizer(args.cfg_file)
-            self.coco17_ = self._prepare_output_(out_base_dir, _basename+'_coco17.mp4')
+            if args.index < 0:
+                self.coco17_ = self._prepare_output_(self.rgb_base, self.seq_name+'_coco17.mp4')
 
-        if self.draw_coco17_kps:
-            self.coco17_kps_ = self._prepare_output_(out_base_dir, _basename+'_coco17_kps.mp4')
+        if self.draw_coco17_kps and args.index < 0:
+            self.coco17_kps_ = self._prepare_output_(self.rgb_base, self.seq_name+'_coco17_kps.mp4')
 
         if self.draw_smpl:
             self._create_human_model(model_type)
             self.renderer = Renderer(resolution=(self.im_width, self.im_height), wireframe=args.wireframe)
-            self.img_smpl_ = self._prepare_output_(out_base_dir, _basename+'_smpl.mp4')
+            if args.index < 0:
+                self.img_smpl_ = self._prepare_output_(self.rgb_base, self.seq_name+'_smpl.mp4')
 
-        if self.draw_human_pc:
-            self.human_pc_ = self._prepare_output_(out_base_dir, _basename+'_human_pc.mp4')
+        if self.draw_human_pc and args.index < 0:
+            self.human_pc_ = self._prepare_output_(self.rgb_base, self.seq_name+'_human_pc.mp4')
 
-        if self.draw_scene_pc:
-            self.scene_pc_ = self._prepare_output_(out_base_dir, _basename+'_scene_pc.mp4')
+        if self.draw_scene_pc and args.index < 0:
+            self.scene_pc_ = self._prepare_output_(self.rgb_base, self.seq_name+'_scene_pc.mp4')
         
     def _create_human_model(self, model_type='smpl'):
         """call after _load_sence()"""
@@ -93,7 +92,7 @@ class SenceRender(object):
         codec, file_ext = (
             ("x264", ".mkv") if test_opencv_video_format("x264", ".mkv") else ("mp4v", ".mp4")
         )
-        if codec == ".mp4v":
+        if codec == "mp4v":
             warnings.warn("x264 codec not available, switching to mp4v")
 
         if os.path.isdir(save_path):
@@ -113,16 +112,21 @@ class SenceRender(object):
             # some installation of opencv may not support x264 (due to its license),
             # you can try other format (e.g. MPEG)
             fourcc=cv2.VideoWriter_fourcc(*codec),
-            fps=int(fps), # FIXME: 
+            fps=fps,
             frameSize=(w, h),
             isColor=True,
         )
 
-    def run(self):
+    def run(self, index = -1):
+        count = -1
         for sample in tqdm.tqdm(self.sequence):
+            count += 1
+            if index >= 0 and count != index:
+                continue
+
             img_path = os.path.join(self.img_base_path, sample['file_basename'])
             extrinsic = sample['cam_pose']
-            
+
             # smpl
             if self.draw_smpl:
                 img = cv2.imread(img_path)
@@ -145,7 +149,10 @@ class SenceRender(object):
                         sence_pc_pose = None,
                         mesh_filename = None)
                     
-                self.img_smpl_.write(img)
+                if index >= 0:
+                    cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_smpl_{index}.jpg'), img)
+                else:
+                    self.img_smpl_.write(img)
 
             # coco17
             if self.draw_coco17:
@@ -155,7 +162,11 @@ class SenceRender(object):
                         img, [0, ], # id 
                         np.array([sample['bbox'], ]),
                         np.array([sample['skel_2d'], ]))
-                self.coco17_.write(img)
+                    
+                if index >= 0:
+                    cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_coco17_{index}.jpg'), img)
+                else:
+                    self.coco17_.write(img)
 
             # render 2D kps to image
             if self.draw_coco17_kps:
@@ -163,7 +174,11 @@ class SenceRender(object):
                 if len(sample['bbox']) != 0: 
                     cocoskel = np.array(sample['skel_2d'])
                     img = draw_skel2image(img, cocoskel[:, :-1])
-                self.coco17_kps_.write(img)
+                    
+                if index >= 0:
+                    cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_coco17_kps_{index}.jpg'), img)
+                else:
+                    self.coco17_kps_.write(img)
 
             # human pc 
             if self.draw_human_pc:
@@ -175,7 +190,11 @@ class SenceRender(object):
                                              self.cam_dist)
                 else:
                     img = cv2.imread(img_path)
-                self.human_pc_.write(img)
+                    
+                if index >= 0:
+                    cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_human_pc_{index}.jpg'), img)
+                else:
+                    self.human_pc_.write(img)
 
             # scene point cloud
             if self.draw_scene_pc:
@@ -188,13 +207,22 @@ class SenceRender(object):
                                               self.cam_in, 
                                               # self.cam_dist,
                                               )
-                self.scene_pc_.write(img)
+                
+                if index >= 0:
+                    cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_scene_pc_{index}.jpg'), img)
+                else:
+                    self.scene_pc_.write(img)
+
 
 def parse_args():
+    file_path = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pkl_name", type=str, required=True, help="xxx")
+    # parser.add_argument("--pkl_name", type=str, required=True, help="xxx")
     parser.add_argument('--base_path', type=str, required=True,
                         help='path to sequence folder')
+    
+    parser.add_argument('--index', type=int, default=100,
+                        help='the index frame to be saved to a image')
     
     parser.add_argument('--draw_coco17', action='store_true',
                         help='draw COCO17 to images and save as video.')
@@ -206,19 +234,20 @@ def parse_args():
                         help='draw human point cloud to images and save as video.')
     parser.add_argument('--draw_scene_pc', action='store_true',
                         help='draw scene point cloud to images and save as video.')
-    parser.add_argument('--smpl_model_path', type=str, default="../smpl",
+    parser.add_argument('--smpl_model_path', type=str, default=f"{os.path.dirname(file_path)}/smpl",
                         help='path to SMPL models')
     parser.add_argument('--wireframe', type=bool, default=False,
                         help='render all meshes as wireframes.')
     parser.add_argument('--save_obj', type=bool, default=False,
                         help='save results as .obj files.')
     parser.add_argument("--cfg_file", type=str,
-                        default="libs/detectron2/configs/COCO-Keypoints/keypoint_rcnn_R_101_FPN_3x.yaml")
+                        default=f"{file_path}/libs/detectron2/configs/COCO-Keypoints/keypoint_rcnn_R_101_FPN_3x.yaml")
 
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = parse_args()
-    det = SenceRender(args)
-    det.run()
+    print(f"Renderring sequence in: {args.base_path}")
 
+    det = SenceRender(args)
+    det.run(args.index)
