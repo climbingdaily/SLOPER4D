@@ -22,7 +22,7 @@ import numpy as np
 
 from Render import Renderer
 from Visualizer import HumanVisualizer
-from vis_utils import test_opencv_video_format, draw_skel2image, plot_points_on_img, extrinsic_to_cam
+from vis_utils import test_opencv_video_format, draw_skel2image, plot_points_on_img, extrinsic_to_cam, get_bool_array_from_coordinates, load_mask, load_box
 from utils import load_point_cloud
 
 from src import  SLOPER4D_Loader
@@ -39,6 +39,7 @@ class SenceRender(object):
         self.draw_human_pc   = args.draw_human_pc
         self.draw_scene_pc   = args.draw_scene_pc
         self.draw_coco17_kps = args.draw_coco17_kps
+        self.draw_mask       = args.draw_mask
 
         self.sequence  = SLOPER4D_Loader(os.path.join(args.base_path, self.seq_name+"_labels.pkl"), 
                                          return_torch=False)
@@ -58,6 +59,9 @@ class SenceRender(object):
 
         if self.draw_coco17_kps and args.index < 0:
             self.coco17_kps_ = self._prepare_output_(self.rgb_base, self.seq_name+'_coco17_kps.mp4')
+
+        if self.draw_mask and args.index < 0:
+            self.masks_ = self._prepare_output_(self.rgb_base, self.seq_name+'_mask.mp4')
 
         if self.draw_smpl:
             self._create_human_model(model_type)
@@ -90,10 +94,10 @@ class SenceRender(object):
             os.mkdir(save_path)
 
         codec, file_ext = (
-            ("x264", ".mkv") if test_opencv_video_format("x264", ".mkv") else ("mp4v", ".mp4")
+            ("mp4v", ".mp4") if test_opencv_video_format("mp4v", ".mp4") else ("x264", ".mkv")
         )
-        if codec == "mp4v":
-            warnings.warn("x264 codec not available, switching to mp4v")
+        # if codec == "mp4v":
+        #     warnings.warn("x264 codec not available, switching to mp4v")
 
         if os.path.isdir(save_path):
             output_fname = os.path.join(save_path, basename)
@@ -125,11 +129,11 @@ class SenceRender(object):
                 continue
 
             img_path = os.path.join(self.img_base_path, sample['file_basename'])
+            origin_img = cv2.imread(img_path)
             extrinsic = sample['cam_pose']
 
             # smpl
             if self.draw_smpl:
-                img = cv2.imread(img_path)
                 if len(sample['smpl_pose']) != 0: 
                     with torch.no_grad():
                         smpl_md = self.human_model(betas=sample['betas'].reshape(-1,10), 
@@ -141,13 +145,15 @@ class SenceRender(object):
                     smpl_verts  = smpl_md.vertices.detach().cpu().numpy().squeeze()
                     
                     img = self.renderer.render(
-                        img,
+                        origin_img.copy(),
                         smpl_model    = (smpl_verts, self.human_model.faces),
                         cam           = (self.cam_in, extrinsic_to_cam(extrinsic)),
                         color         = self.smpl_color,
                         human_pc      = None,
                         sence_pc_pose = None,
                         mesh_filename = None)
+                else:
+                    img = origin_img
                     
                 if index >= 0:
                     cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_smpl_{index}.jpg'), img)
@@ -156,13 +162,13 @@ class SenceRender(object):
 
             # coco17
             if self.draw_coco17:
-                img = cv2.imread(img_path)
                 if len(sample['bbox']) != 0: 
                     img = self.visualizer.draw_predicted_humans(
-                        img, [0, ], # id 
+                        origin_img.copy(), [0, ], # id 
                         np.array([sample['bbox'], ]),
                         np.array([sample['skel_2d'], ]))
-                    
+                else:
+                    img = origin_img
                 if index >= 0:
                     cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_coco17_{index}.jpg'), img)
                 else:
@@ -170,11 +176,11 @@ class SenceRender(object):
 
             # render 2D kps to image
             if self.draw_coco17_kps:
-                img = cv2.imread(img_path)
                 if len(sample['bbox']) != 0: 
                     cocoskel = np.array(sample['skel_2d'])
-                    img = draw_skel2image(img, cocoskel[:, :-1])
-                    
+                    img = draw_skel2image(origin_img.copy(), cocoskel[:, :-1])
+                else:
+                    img = origin_img
                 if index >= 0:
                     cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_coco17_kps_{index}.jpg'), img)
                 else:
@@ -183,13 +189,13 @@ class SenceRender(object):
             # human pc 
             if self.draw_human_pc:
                 if len(sample['human_points']) != 0:
-                    img = plot_points_on_img(img_path, 
+                    img = plot_points_on_img(origin_img.copy(), 
                                              np.array(sample['human_points']), 
                                              extrinsic, 
                                              self.cam_in, 
                                              self.cam_dist)
                 else:
-                    img = cv2.imread(img_path)
+                    img = origin_img
                     
                 if index >= 0:
                     cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_human_pc_{index}.jpg'), img)
@@ -201,7 +207,7 @@ class SenceRender(object):
                 pcd_name = f"{sample['lidar_tstamps']:.03f}".replace('.', '_') + '.pcd'
                 pc_path  = os.path.join(self.pc_base_path, pcd_name)
                 sence_pc = load_point_cloud(pc_path)
-                img      = plot_points_on_img(img_path, 
+                img      = plot_points_on_img(origin_img.copy(), 
                                               np.asarray(sence_pc.points), 
                                               extrinsic, 
                                               self.cam_in, 
@@ -212,6 +218,21 @@ class SenceRender(object):
                     cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_scene_pc_{index}.jpg'), img)
                 else:
                     self.scene_pc_.write(img)
+
+            if self.draw_mask:
+                if len(sample['mask']) != 0: 
+                    coordinate = np.array(sample['mask'])
+                    print(coordinate.shape)
+                    masks = get_bool_array_from_coordinates(coordinate)[None, :, :]
+                    mask_image = load_mask(masks, False)
+                    img = load_box(sample['bbox'], origin_img.copy())
+                    img = cv2.add(img, mask_image)
+                else:
+                    img = origin_img
+                if index >= 0:
+                    cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_mask_{index}.jpg'), img)
+                else:
+                    self.masks_.write(img)
 
 
 def parse_args():
@@ -226,6 +247,8 @@ def parse_args():
     
     parser.add_argument('--draw_coco17', action='store_true',
                         help='draw COCO17 to images and save as video.')
+    parser.add_argument('--draw_mask', action='store_true',
+                        help='draw masks to images and save as video.')
     parser.add_argument('--draw_coco17_kps', action='store_true',
                         help='draw COCO17 keypoints to images and save as video.')
     parser.add_argument('--draw_smpl', action='store_true',

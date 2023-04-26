@@ -36,11 +36,18 @@ class SLOPER4D_Dataset(Dataset):
         # Check if all the lists inside rgb_frames have the same length
         self.length = len(self.file_basename)
 
+        try:
+            with open(pkl_file[:-4] + "_mask.pkl", 'rb') as f:
+                self.masks = pickle.load(f)['masks']
+        except:
+            self.masks = [[]*self.length]
+
         assert all(len(lst) == self.length for lst in [self.bbox, self.skel_2d, self.extrinsic, 
-                                                       self.tstamp, self.lidar_tstamps, 
+                                                       self.tstamp, self.lidar_tstamps, self.masks, 
                                                        self.smpl_pose, self.global_trans, 
                                                        self.betas, self.human_points])
         
+
         print(f'Data lenght: {self.length}')
         
     def return_smpl_verts(self, is_cuda=False):
@@ -62,6 +69,7 @@ class SLOPER4D_Dataset(Dataset):
             'tstamp'       : self.tstamp[index],
 
             'bbox'         : self.bbox[index],
+            'mask'         : self.masks[index],
             'skel_2d'      : self.skel_2d[index],
             'cam_pose'     : self.cam_pose[index],    
 
@@ -74,7 +82,7 @@ class SLOPER4D_Dataset(Dataset):
 
         if self.return_torch:
             for k, v in sample.items():
-                if type(v) != str:
+                if type(v) != str and type(v) != torch.Tensor:
                     sample[k] = torch.tensor(v).float().to(self.device)
 
         mispart = ''
@@ -92,7 +100,7 @@ class SLOPER4D_Dataset(Dataset):
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='SLOPER4D dataset')
-    parser.add_argument('--pkl_file', type=str, default='/wd8t/sloper4d_publish/seq004_library_001/seq004_library_001_labels.pkl', help='Path to the pkl file')
+    parser.add_argument('--pkl_file', type=str, default='/wd8t/sloper4d_publish/seq002_football_001/seq002_football_001_labels.pkl', help='Path to the pkl file')
     args = parser.parse_args()
     
     dataset = SLOPER4D_Dataset(args.pkl_file)

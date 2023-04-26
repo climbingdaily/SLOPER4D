@@ -69,6 +69,33 @@ def boxes_xyxy2xcycwh(xyxy):
     ]).T
     return xcycwh
 
+
+def load_mask(mask, random_color):
+
+    if random_color:
+        color = np.random.rand(3) * 255
+    else:
+        color = np.array([100, 50, 0])
+
+    h, w = mask.shape[-2:]
+    mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
+    mask_image = mask_image.astype(np.uint8)
+    # mask_image = cv2.cvtColor(mask_image, cv2.COLOR_BGR2RGB)
+    return mask_image
+
+def load_box(box, image):
+
+    x, y, w, h = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+    cv2.rectangle(image, (x, y), (w, h), (0, 255, 0), 2)
+    return image
+
+def get_bool_array_from_coordinates(coordinates, shape=(1080, 1920)):
+    bool_arr = np.zeros(shape, dtype=bool)
+
+    bool_arr[coordinates[:, 0], coordinates[:, 1]] = True
+
+    return bool_arr
+
 def test_opencv_video_format(codec, file_ext):
     with tempfile.TemporaryDirectory(prefix="video_format_test") as dir:
         filename = os.path.join(dir, "test_file" + file_ext)
@@ -221,10 +248,11 @@ def world_to_camera(X, extrinsic_matrix):
     X = np.dot(extrinsic_matrix, X).T
     return X[..., :3]
 
-def plot_points_on_img(img_path, 
+def plot_points_on_img(img, 
                        points3d, 
                        extrinsic, 
                        intrinsic,
+                       img_path='',
                        dist=np.zeros(5), 
                        colors=None, 
                        max_depth=15, 
@@ -248,8 +276,6 @@ def plot_points_on_img(img_path,
       max_depth: The maximum depth value for the points to be plotted. Points with depth values greater
     than this will not be plotted. Defaults to 15
     """
-
-    img = cv2.imread(img_path)
 
     camera_points = world_to_camera(points3d, extrinsic)
     if colors is not None:

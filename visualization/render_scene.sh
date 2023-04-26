@@ -15,5 +15,6 @@ python ./visualization/render_scene.py --base_path $DATA_BASE --index $INDEX \
     --draw_coco17_kps \
     --draw_smpl \
     --draw_human_pc \
+    --draw_mask \
     --draw_scene_pc \
 > $DATA_BASE/rgb_data/$seq_name$suffix".log"
