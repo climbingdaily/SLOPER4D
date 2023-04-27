@@ -21,8 +21,7 @@ import smplx
 import numpy as np
 
 from Render import Renderer
-from Visualizer import HumanVisualizer
-from vis_utils import test_opencv_video_format, draw_skel2image, plot_points_on_img, extrinsic_to_cam, get_bool_array_from_coordinates, load_mask, load_box
+from vis_utils import test_opencv_video_format, plot_points_on_img, extrinsic_to_cam, plot_coco_annotation
 from utils import load_point_cloud
 
 from src import  SLOPER4D_Loader
@@ -34,11 +33,10 @@ class SenceRender(object):
         self.img_base_path   = os.path.join(args.base_path, "rgb_data", f"{self.seq_name}_imgs")
         self.pc_base_path    = os.path.join(args.base_path, "lidar_data", "lidar_frames_rot")
                                             
-        self.draw_coco17     = args.draw_coco17
         self.draw_smpl       = args.draw_smpl
+        self.draw_coco17     = args.draw_coco17
         self.draw_human_pc   = args.draw_human_pc
         self.draw_scene_pc   = args.draw_scene_pc
-        self.draw_coco17_kps = args.draw_coco17_kps
         self.draw_mask       = args.draw_mask
 
         self.sequence  = SLOPER4D_Loader(os.path.join(args.base_path, self.seq_name+"_labels.pkl"), 
@@ -53,12 +51,8 @@ class SenceRender(object):
         # prepare files for visualization
         os.makedirs(self.rgb_base, exist_ok=True)
         if self.draw_coco17:
-            self.visualizer = HumanVisualizer(args.cfg_file)
             if args.index < 0:
                 self.coco17_ = self._prepare_output_(self.rgb_base, self.seq_name+'_coco17.mp4')
-
-        if self.draw_coco17_kps and args.index < 0:
-            self.coco17_kps_ = self._prepare_output_(self.rgb_base, self.seq_name+'_coco17_kps.mp4')
 
         if self.draw_mask and args.index < 0:
             self.masks_ = self._prepare_output_(self.rgb_base, self.seq_name+'_mask.mp4')
@@ -157,34 +151,26 @@ class SenceRender(object):
                     
                 if index >= 0:
                     cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_smpl_{index}.jpg'), img)
+                    print(f"image save to: {os.path.join(self.rgb_base, f'{self.seq_name}_smpl_{index}.jpg')}")
                 else:
                     self.img_smpl_.write(img)
 
             # coco17
-            if self.draw_coco17:
+            if self.draw_coco17 or self.draw_mask:
                 if len(sample['bbox']) != 0: 
-                    img = self.visualizer.draw_predicted_humans(
-                        origin_img.copy(), [0, ], # id 
+                    img = plot_coco_annotation(
+                        origin_img.copy(),
+                        np.array([sample['skel_2d']]) if self.draw_coco17 else None,
                         np.array([sample['bbox'], ]),
-                        np.array([sample['skel_2d'], ]))
+                        np.array(sample['mask']) if self.draw_mask else None)
                 else:
                     img = origin_img
+                    
                 if index >= 0:
                     cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_coco17_{index}.jpg'), img)
+                    print(f"image save to: {os.path.join(self.rgb_base, f'{self.seq_name}_coco17_{index}.jpg')}")
                 else:
                     self.coco17_.write(img)
-
-            # render 2D kps to image
-            if self.draw_coco17_kps:
-                if len(sample['bbox']) != 0: 
-                    cocoskel = np.array(sample['skel_2d'])
-                    img = draw_skel2image(origin_img.copy(), cocoskel[:, :-1])
-                else:
-                    img = origin_img
-                if index >= 0:
-                    cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_coco17_kps_{index}.jpg'), img)
-                else:
-                    self.coco17_kps_.write(img)
 
             # human pc 
             if self.draw_human_pc:
@@ -199,6 +185,7 @@ class SenceRender(object):
                     
                 if index >= 0:
                     cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_human_pc_{index}.jpg'), img)
+                    print(f"image save to: {os.path.join(self.rgb_base, f'{self.seq_name}_human_pc_{index}.jpg')}")
                 else:
                     self.human_pc_.write(img)
 
@@ -216,23 +203,23 @@ class SenceRender(object):
                 
                 if index >= 0:
                     cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_scene_pc_{index}.jpg'), img)
+                    print(f"image save to: {os.path.join(self.rgb_base, f'{self.seq_name}_scene_pc_{index}.jpg')}")
                 else:
                     self.scene_pc_.write(img)
 
-            if self.draw_mask:
-                if len(sample['mask']) != 0: 
-                    coordinate = np.array(sample['mask'])
-                    print(coordinate.shape)
-                    masks = get_bool_array_from_coordinates(coordinate)[None, :, :]
-                    mask_image = load_mask(masks, False)
-                    img = load_box(sample['bbox'], origin_img.copy())
-                    img = cv2.add(img, mask_image)
-                else:
-                    img = origin_img
-                if index >= 0:
-                    cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_mask_{index}.jpg'), img)
-                else:
-                    self.masks_.write(img)
+            # if self.draw_mask:
+            #     if len(sample['mask']) != 0: 
+            #         coordinate = np.array(sample['mask'])
+            #         masks = get_bool_array_from_coordinates(coordinate)[None, :, :]
+            #         mask_image = load_mask(masks, False)
+            #         img = load_box(sample['bbox'], origin_img.copy())
+            #         img = cv2.add(img, mask_image)
+            #     else:
+            #         img = origin_img
+            #     if index >= 0:
+            #         cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_mask_{index}.jpg'), img)
+            #     else:
+            #         self.masks_.write(img)
 
 
 def parse_args():
@@ -249,8 +236,6 @@ def parse_args():
                         help='draw COCO17 to images and save as video.')
     parser.add_argument('--draw_mask', action='store_true',
                         help='draw masks to images and save as video.')
-    parser.add_argument('--draw_coco17_kps', action='store_true',
-                        help='draw COCO17 keypoints to images and save as video.')
     parser.add_argument('--draw_smpl', action='store_true',
                         help='draw SMPL to images and save as video.')
     parser.add_argument('--draw_human_pc', action='store_true',
@@ -263,8 +248,6 @@ def parse_args():
                         help='render all meshes as wireframes.')
     parser.add_argument('--save_obj', type=bool, default=False,
                         help='save results as .obj files.')
-    parser.add_argument("--cfg_file", type=str,
-                        default=f"{file_path}/libs/detectron2/configs/COCO-Keypoints/keypoint_rcnn_R_101_FPN_3x.yaml")
 
     return parser.parse_args()
 

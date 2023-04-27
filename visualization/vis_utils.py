@@ -6,6 +6,8 @@ import tempfile
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import List, Tuple, Optional
+from pycocotools import mask as mask_utils
 
 root_folder = os.path.abspath(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,6 +27,89 @@ COLORS_10 =[(144,238,144),(178, 34, 34),(221,160,221),(  0,255,  0),(  0,128,  0
             (245,255,250),(240,230,140),(245,222,179),(  0,139,139),(143,188,143),(255,  0,  0),(240,128,128),
             (102,205,170),( 60,179,113),( 46,139, 87),(165, 42, 42),(178, 34, 34),(175,238,238),(255,248,220),
             (218,165, 32),(255,250,240),(253,245,230),(244,164, 96),(210,105, 30)]
+BONES = [    
+    [0, 1], [0, 2], [1, 3], [2, 4], [0, 5], [0, 6], [5, 7], [7, 9], [6, 8],
+    [8, 10], [5, 6], [5, 11], [6, 12], [11, 12], [11, 13], [13, 15], [12, 14], [14, 16]
+]
+
+COCO_COLORS = [
+    (255, 0, 0), (255, 85, 0), (255, 170, 0), (255, 255, 0), (170, 255, 0),
+    (85, 255, 0), (0, 255, 0), (0, 255, 85), (0, 255, 170), (0, 255, 255),
+    (0, 170, 255), (0, 85, 255), (0, 0, 255), (85, 0, 255), (170, 0, 255),
+    (255, 0, 255), (255, 0, 170)
+]
+
+JOINTS = {0: 'nose', 1: 'left_eye', 2: 'right_eye', 3: 'left_ear', 4: 'right_ear', 
+5: 'left_shoulder', 6: 'right_shoulder', 7: 'left_elbow', 8: 'right_elbow', 
+9: 'left_wrist', 10: 'right_wrist', 11: 'left_hip', 12: 'right_hip', 
+13: 'left_knee', 14: 'right_knee', 15: 'left_ankle', 16: 'right_ankle'
+}
+
+
+
+def plot_coco_annotation(img: np.ndarray,
+                         keypoints: Optional[np.ndarray] = None,
+                         bboxes: Optional[Tuple[int, int, int, int]] = None,
+                         mask: Optional[List[dict]] = None,
+                         keypoint_radius: int = 3,
+                         line_width: int = 2,
+                         alpha: float = 0.7,
+                         _KEYPOINT_THRESHOLD = 0.05,
+                         save_path: Optional[str] = None) -> np.ndarray:
+    overlay = np.copy(img)
+
+    if mask is not None:
+        coordinate = np.array(mask)
+        masks = get_bool_array_from_coordinates(coordinate)[None, :, :]
+        mask_image = load_mask(masks, False)
+        img = cv2.add(img, mask_image)
+        
+        # for m in mask:
+        #     poly = mask_utils.decode(m['segmentation'])
+        #     color = np.random.rand(3) * 255
+        #     cv2.fillPoly(img, [poly], color=color.astype(int))
+    
+    if bboxes is not None:
+        for bbox in bboxes:
+            cv2.rectangle(img, 
+                          (bbox[0], bbox[1]), (bbox[2], bbox[3]), 
+                          color=(50, 200, 0), 
+                          thickness=3)
+            
+    
+    if keypoints is not None:
+        for per_kpt in keypoints:
+            per_kpt    = per_kpt.reshape(-1, 3)
+            points     = per_kpt[:, :2].astype(int)
+            visibility = per_kpt[:, 2]
+                    
+            for i, conn in enumerate(BONES):
+                if visibility[conn[0]] > _KEYPOINT_THRESHOLD and visibility[conn[1]] > _KEYPOINT_THRESHOLD:
+                    cv2.line(img, tuple(points[conn[0]]), tuple(points[conn[1]]), 
+                             color=COCO_COLORS[conn[1]], 
+                             thickness=line_width)
+                else:
+                    cv2.line(img, tuple(points[conn[0]]), tuple(points[conn[1]]), 
+                             color=(100, 100, 100), 
+                             thickness=line_width-1)
+                    
+            cv2.addWeighted(overlay, 1-alpha, img, alpha, 0, img)
+
+            for i, p in enumerate(points):
+                if visibility[i] > _KEYPOINT_THRESHOLD:
+                    cv2.circle(img, (p[0], p[1]), 
+                               radius=keypoint_radius, 
+                               color=COCO_COLORS[i], 
+                               thickness=-1)
+                else:
+                    cv2.circle(img, (p[0], p[1]), 
+                               radius=keypoint_radius-1, 
+                               color=(100,100,100), 
+                               thickness=-1)
+    if save_path is not None:
+        cv2.imwrite(save_path, img)
+        
+    return img
 
 
 def draw_bbox(img, box, cls_name, identity=None, offset=(0,0)):
@@ -218,13 +303,12 @@ def draw_pc2image(image, sence_pc, colors):
     return image
 
 def draw_skel2image(image, sence_pc):
-    rgb = np.array([0,0,1.])
     for i, (x, y) in enumerate(sence_pc):
         x = int(math.floor(x))
         y = int(math.floor(y))
         if x < 0 or x >= image.shape[1] or y < 0 or y >= image.shape[0]:
             continue
-        cv2.circle(image, (x, y), 2, color=rgb*255, thickness=-1)
+        cv2.circle(image, (x, y), 3, color=COCO_COLORS[i], thickness=-1)
     return image
 
 def draw_pc2mask(mask, pc, size=1):

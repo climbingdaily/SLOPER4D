@@ -17,11 +17,10 @@
     - Some parameters in `render_sence.sh`：
 
     ```shell
-        --draw_coco17 \				# visualize COCO17 skeleton
-        --draw_coco17_kps \		    # visualize COCO17 keypoints
-        --draw_smpl \				# visualize SMPL
-        --draw_human_pc \			# visualize human point cloud
-        --draw_scene_pc \			# visualize scene point cloud
+        --draw_smpl \				# render SMPL
+        --draw_coco17 \				# render COCO17 elements
+        --draw_human_pc \			# render human point cloud
+        --draw_scene_pc \			# render scene point cloud
     ```
 ## **SMPL visualization**
    Please refer these visualization tool [SMPL-Scene Viewer](https://github.com/climbingdaily/SMPL-Scene-Viewer),
