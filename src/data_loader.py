@@ -1,3 +1,4 @@
+import os
 import argparse
 import pickle
 import torch
@@ -12,7 +13,7 @@ class SLOPER4D_Dataset(Dataset):
         self.return_torch = return_torch
         self.lidar_fps    = data['LiDAR_info']['fps'] # scalar
         self.smpl_fps     = data['SMPL_info']['fps']  # scalar
-        self.smpl_gender  = data['SMPL_info']['gender']  # scalar
+        self.smpl_gender  = data['SMPL_info']['gender']  # string
 
         self.rgb_fps        = data['RGB_info']['fps']        # scalar
         self.rgb_width      = data['RGB_info']['width']      # scalar
@@ -33,15 +34,20 @@ class SLOPER4D_Dataset(Dataset):
         self.betas         = data['RGB_frames']['beta']          # n x 10 array of scalars
         self.human_points  = data['RGB_frames']['human_points']  # list of n arrays, each of shape (x_i, 3)
 
-        # Check if all the lists inside rgb_frames have the same length
         self.length = len(self.file_basename)
 
-        try:
-            with open(pkl_file[:-4] + "_mask.pkl", 'rb') as f:
+        mask_pkl = pkl_file[:-4] + "_mask.pkl"
+        if os.path.exists(mask_pkl):
+            with open(mask_pkl, 'rb') as f:
+                print(f'Loading: {mask_pkl}')
                 self.masks = pickle.load(f)['masks']
-        except:
-            self.masks = [[]*self.length]
+        else:
+            self.masks = [[]]*self.length
 
+        self.check_lenght()
+
+    def check_lenght(self):
+        # Check if all the lists inside rgb_frames have the same length
         assert all(len(lst) == self.length for lst in [self.bbox, self.skel_2d, self.extrinsic, 
                                                        self.tstamp, self.lidar_tstamps, self.masks, 
                                                        self.smpl_pose, self.global_trans, 
@@ -87,7 +93,7 @@ class SLOPER4D_Dataset(Dataset):
 
         mispart = ''
         mispart += 'box ' if len(sample['bbox']) < 1 else ''
-        mispart += 's2d ' if len(sample['skel_2d']) < 1 else ''
+        mispart += 'kpt ' if len(sample['skel_2d']) < 1 else ''
         mispart += 'pts ' if len(sample['human_points']) < 1 else ''
            
         if len(mispart) > 0:
@@ -100,7 +106,7 @@ class SLOPER4D_Dataset(Dataset):
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='SLOPER4D dataset')
-    parser.add_argument('--pkl_file', type=str, default='/wd8t/sloper4d_publish/seq002_football_001/seq002_football_001_labels.pkl', help='Path to the pkl file')
+    parser.add_argument('--pkl_file', type=str, default='/wd8t/sloper4d_publish/seq003_street_002/seq003_street_002_labels.pkl', help='Path to the pkl file')
     args = parser.parse_args()
     
     dataset = SLOPER4D_Dataset(args.pkl_file)

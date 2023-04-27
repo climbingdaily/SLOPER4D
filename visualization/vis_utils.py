@@ -73,7 +73,7 @@ def plot_coco_annotation(img: np.ndarray,
         for bbox in bboxes:
             cv2.rectangle(img, 
                           (bbox[0], bbox[1]), (bbox[2], bbox[3]), 
-                          color=(50, 200, 0), 
+                          color=(220, 173, 69), 
                           thickness=3)
             
     
@@ -86,7 +86,7 @@ def plot_coco_annotation(img: np.ndarray,
             for i, conn in enumerate(BONES):
                 if visibility[conn[0]] > _KEYPOINT_THRESHOLD and visibility[conn[1]] > _KEYPOINT_THRESHOLD:
                     cv2.line(img, tuple(points[conn[0]]), tuple(points[conn[1]]), 
-                             color=COCO_COLORS[conn[1]], 
+                             color=(np.array(COCO_COLORS[conn[0]]) + np.array(COCO_COLORS[conn[1]]))/2, 
                              thickness=line_width)
                 else:
                     cv2.line(img, tuple(points[conn[0]]), tuple(points[conn[1]]), 
@@ -176,8 +176,8 @@ def load_box(box, image):
 
 def get_bool_array_from_coordinates(coordinates, shape=(1080, 1920)):
     bool_arr = np.zeros(shape, dtype=bool)
-
-    bool_arr[coordinates[:, 0], coordinates[:, 1]] = True
+    if len(coordinates) > 0:
+        bool_arr[coordinates[:, 0], coordinates[:, 1]] = True
 
     return bool_arr
 
