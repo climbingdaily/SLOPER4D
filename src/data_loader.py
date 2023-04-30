@@ -1,7 +1,9 @@
 import os
 import argparse
+
 import pickle
 import torch
+import numpy as np
 from torch.utils.data import Dataset, DataLoader
 
 class SLOPER4D_Dataset(Dataset):
@@ -47,6 +49,30 @@ class SLOPER4D_Dataset(Dataset):
             self.masks = [[]]*self.length
 
         self.check_lenght()
+
+        self.data = data
+        self.pkl_file = pkl_file
+
+    def updata_pkl(self, img_name, 
+                   bbox=None, 
+                   cam_pose=None, 
+                   keypoints=None):
+        if img_name in self.file_basename:
+            index = self.file_basename.index(img_name)
+            if bbox is not None:
+                self.data['RGB_frames']['bbox'][index] = bbox
+            if keypoints is not None:
+                self.data['RGB_frames']['skel_2d'][index] = keypoints
+            if cam_pose is not None:
+                self.data['RGB_frames']['cam_pose'][index] = cam_pose
+        else:
+            print(f"{img_name} is not in the synchronized labels file")
+
+    def save_pkl(self):
+        save_path = self.pkl_file[:-4] + '_updated.pkl'
+        with open(save_path, 'wb') as f:
+            pickle.dump(self.data, f)
+        print(f"{save_path} saved")
 
     def check_lenght(self):
         # Check if all the lists inside rgb_frames have the same length

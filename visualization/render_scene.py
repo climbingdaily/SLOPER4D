@@ -49,6 +49,18 @@ class SenceRender(object):
         self.cam_width  = self.sequence.cam['width']
         self.cam_height = self.sequence.cam['height']
 
+        num_joints = 17
+        if args.losstype == 'MSELoss'.lower():
+            self.vis_thres = [0.4] * num_joints
+        elif 'Regression'.lower() in args.losstype:
+            self.vis_thres = [0.05] * num_joints
+        elif args.losstype == 'Combined'.lower():
+            if num_joints == 68:
+                hand_face_num = 42
+            else:
+                hand_face_num = 110
+            self.vis_thres = [0.4] * (num_joints - hand_face_num) + [0.05] * hand_face_num 
+
         # prepare files for visualization
         os.makedirs(self.rgb_base, exist_ok=True)
         if self.draw_coco17:
@@ -126,7 +138,8 @@ class SenceRender(object):
             img_path = os.path.join(self.img_base_path, sample['file_basename'])
             origin_img = cv2.imread(img_path)
             extrinsic = sample['cam_pose']
-
+            cv2.putText(origin_img, f"{count:05d}: {sample['file_basename']}", (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 2)
+    
             # smpl
             if self.draw_smpl:
                 if len(sample['smpl_pose']) != 0: 
@@ -158,14 +171,11 @@ class SenceRender(object):
 
             # coco17
             if self.draw_coco17 or self.draw_mask:
-                if len(sample['bbox']) != 0: 
-                    img = plot_coco_annotation(
-                        origin_img.copy(),
-                        np.array([sample['skel_2d']]) if self.draw_coco17 else None,
-                        np.array([sample['bbox'], ]),
-                        np.array(sample['mask']) if self.draw_mask else None)
-                else:
-                    img = origin_img
+                img = plot_coco_annotation(origin_img.copy(),
+                    keypoints = np.array([sample['skel_2d']]) if self.draw_coco17 else None,
+                    bboxes = np.array([sample['bbox'], ]),
+                    mask = np.array(sample['mask']) if self.draw_mask else None,
+                    _KEYPOINT_THRESHOLD= self.vis_thres)
                     
                 if index >= 0:
                     cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_coco17_{index}.jpg'), img)
@@ -225,12 +235,11 @@ def parse_args():
     file_path = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser()
     # parser.add_argument("--pkl_name", type=str, required=True, help="xxx")
-    parser.add_argument('--base_path', type=str, 
-                        # required=True,
-                        default="/wd8t/sloper4d_publish/seq002_football_001",
+    parser.add_argument('base_path', type=str,
                         help='path to sequence folder')
-    
-    parser.add_argument('--index', type=int, default=100,
+    parser.add_argument('--losstype', type=str, default='regression',
+                        help='coco keypoints loss type, used for visualization')
+    parser.add_argument('--index', type=int, default=-1,
                         help='the index frame to be saved to a image')
     
     parser.add_argument('--draw_coco17', action='store_true',
@@ -243,6 +252,7 @@ def parse_args():
                         help='draw human point cloud to images and save as video.')
     parser.add_argument('--draw_scene_pc', action='store_true',
                         help='draw scene point cloud to images and save as video.')
+    
     parser.add_argument('--smpl_model_path', type=str, default=f"{os.path.dirname(file_path)}/smpl",
                         help='path to SMPL models')
     parser.add_argument('--wireframe', type=bool, default=False,
@@ -254,11 +264,21 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    args.draw_coco17 = True
-    args.draw_mask = True
-    args.draw_smpl = True
-    args.draw_human_pc = True
-    args.draw_scene_pc = True
+    draw_options = {
+        'coco': args.draw_coco17,
+        'mask': args.draw_mask,
+        'smpl': args.draw_smpl,
+        'human_pc': args.draw_human_pc,
+        'scene_pc': args.draw_scene_pc,
+        }
+    
+    if not np.any(list(draw_options.values())):
+        args.draw_coco17 = True
+        args.draw_mask = True
+        args.draw_smpl = True
+        args.draw_human_pc = True
+        args.draw_scene_pc = True
+
     print(f"Renderring sequence in: {args.base_path}")
 
     det = SenceRender(args)

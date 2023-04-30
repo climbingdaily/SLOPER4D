@@ -28,7 +28,7 @@ COLORS_10 =[(144,238,144),(178, 34, 34),(221,160,221),(  0,255,  0),(  0,128,  0
             (102,205,170),( 60,179,113),( 46,139, 87),(165, 42, 42),(178, 34, 34),(175,238,238),(255,248,220),
             (218,165, 32),(255,250,240),(253,245,230),(244,164, 96),(210,105, 30)]
 BONES = [    
-    [0, 1], [0, 2], [1, 3], [2, 4], [0, 5], [0, 6], [5, 7], [7, 9], [6, 8],
+    [0, 1], [0, 2], [1, 3], [2, 4], [5, 7], [7, 9], [6, 8],
     [8, 10], [5, 6], [5, 11], [6, 12], [11, 12], [11, 13], [13, 15], [12, 14], [14, 16]
 ]
 
@@ -45,6 +45,17 @@ JOINTS = {0: 'nose', 1: 'left_eye', 2: 'right_eye', 3: 'left_ear', 4: 'right_ear
 13: 'left_knee', 14: 'right_knee', 15: 'left_ankle', 16: 'right_ankle'
 }
 
+RED = (0, 0, 255)
+GREEN = (0, 255, 0)
+BLUE = (255, 0, 0)
+CYAN = (255, 255, 0)
+YELLOW = (0, 255, 255)
+ORANGE = (0, 165, 255)
+PURPLE = (255, 0, 255)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+DEFAULT_FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 
 def plot_coco_annotation(img: np.ndarray,
@@ -54,11 +65,12 @@ def plot_coco_annotation(img: np.ndarray,
                          keypoint_radius: int = 3,
                          line_width: int = 2,
                          alpha: float = 0.7,
-                         _KEYPOINT_THRESHOLD = 0.05,
+                         text: str='',
+                         _KEYPOINT_THRESHOLD: Optional[float] = 0.05,
                          save_path: Optional[str] = None) -> np.ndarray:
     overlay = np.copy(img)
 
-    if mask is not None:
+    if mask is not None and len(mask) > 0:
         coordinate = np.array(mask)
         masks = get_bool_array_from_coordinates(coordinate)[None, :, :]
         mask_image = load_mask(masks, False)
@@ -69,19 +81,22 @@ def plot_coco_annotation(img: np.ndarray,
         #     color = np.random.rand(3) * 255
         #     cv2.fillPoly(img, [poly], color=color.astype(int))
     
-    if bboxes is not None:
+    if bboxes is not None and len(bboxes) > 0:
         for bbox in bboxes:
-            cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), 
-                          color=(220, 173, 69), thickness=3)
+            if len(bbox) > 0:
+                cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), 
+                            color=(220, 173, 69), thickness=3)
             
-    if keypoints is not None:
+    if keypoints is not None and len(keypoints) > 0:
         for per_kpt in keypoints:
+            if len(bbox) == 0:
+                continue
             per_kpt    = per_kpt.reshape(-1, 3)
             points     = per_kpt[:, :2].astype(int)
             visibility = per_kpt[:, 2]
                     
             for i, conn in enumerate(BONES):
-                if visibility[conn[0]] > _KEYPOINT_THRESHOLD and visibility[conn[1]] > _KEYPOINT_THRESHOLD:
+                if visibility[conn[0]] > _KEYPOINT_THRESHOLD[i] and visibility[conn[1]] > _KEYPOINT_THRESHOLD[i]:
                     cv2.line(img, tuple(points[conn[0]]), tuple(points[conn[1]]), 
                              color=(np.array(COCO_COLORS[conn[0]]) + np.array(COCO_COLORS[conn[1]]))/2, 
                              thickness=line_width)
@@ -93,7 +108,7 @@ def plot_coco_annotation(img: np.ndarray,
             cv2.addWeighted(overlay, 1-alpha, img, alpha, 0, img)
 
             for i, p in enumerate(points):
-                if visibility[i] > _KEYPOINT_THRESHOLD:
+                if visibility[i] > _KEYPOINT_THRESHOLD[i]:
                     cv2.circle(img, (p[0], p[1]), 
                                radius=keypoint_radius, 
                                color=COCO_COLORS[i], 
@@ -103,6 +118,10 @@ def plot_coco_annotation(img: np.ndarray,
                                radius=keypoint_radius-1, 
                                color=(100,100,100), 
                                thickness=-1)
+
+    if text is not None and len(text) > 0:
+        cv2.putText(img, os.path.basename(text), (30, 60), DEFAULT_FONT, 1, BLACK, 2)
+
     if save_path is not None:
         cv2.imwrite(save_path, img)
         

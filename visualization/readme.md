@@ -3,24 +3,20 @@
 ## **RGB visualization**
 
 1. Follow the [installation instruction](../src/readme.md)
-3. Run
-    - Render annotations to all frames and save them to a video:
+3. Render annotations to all frames and save them to a video:
     ```shell
     root_folder=/path/to/sequence_folder
-    bash ./visualization/render_scene.sh $root_folder
+    python ./visualization/render_scene.sh $root_folder
     ```
-    - Render annotations to the 666 frame and save it to a image:
+
+    - Optional parameters：
 
     ```shell
-    bash ./visualization/render_scene.sh $root_folder 666
-    ```
-    - Some parameters in `render_sence.sh`：
-
-    ```shell
-        --draw_smpl \				# render SMPL
-        --draw_coco17 \				# render COCO17 elements
-        --draw_human_pc \			# render human point cloud
-        --draw_scene_pc \			# render scene point cloud
+        --index         # only render on the frame to a image
+        --draw_smpl 	# render SMPL
+        --draw_coco17 	# render COCO17 elements
+        --draw_human_pc # render human point cloud
+        --draw_scene_pc # render scene point cloud
     ```
 ## **SMPL visualization**
    Please refer these visualization tool [SMPL-Scene Viewer](https://github.com/climbingdaily/SMPL-Scene-Viewer),

@@ -27,23 +27,36 @@ class Vid2imgs:
             else: 
                 break
 
-    def run(self):
+    def run(self, pkl_path):
         img_idx = 0
         progress_bar = tqdm(self._vid_frames())
+
+        if pkl_path is not None and os.path.exists(pkl_path):
+            import pickle
+            with open(pkl_path, 'rb') as f:
+                data = pickle.load(f)
+            file_basename = data['RGB_frames']['file_basename'] # list of n strings
+            valid_timestamp = [fn[:-4] for fn in file_basename]
+        else:
+            valid_timestamp = []
+
         for frame in progress_bar:
 
-            timestamp = img_idx / self.vid_fps
-            img_fname = f"{timestamp:06.06f}.jpg"
+            timestamp = f"{img_idx / self.vid_fps:.06f}"
+            img_fname = timestamp + ".jpg"
             img_path  = os.path.join(self.save_path, img_fname)
 
-            progress_bar.set_description(f"Saving {img_fname}")
-            cv2.imwrite(img_path, frame)
+            if len(valid_timestamp) == 0 or timestamp in valid_timestamp:
+                progress_bar.set_description(f"Saving {img_fname}")
+                cv2.imwrite(img_path, frame)
             img_idx += 1
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("root_folder", type=str, 
                         help="The sequence folder path")
+    parser.add_argument("--pkl", type=str, default='',
+                        help="The annotations fiel path")
     return parser.parse_args() 
             
 if __name__ == '__main__':
@@ -56,6 +69,7 @@ if __name__ == '__main__':
     if not os.path.isfile(vid_path): 
         print("Not found: ", vid_path)
     else:
+        pkl_path = os.path.join(root_folder, f'{seq_name}_labels.pkl')
         to_images = Vid2imgs(vid_path)
-        to_images.run()
+        to_images.run(pkl_path)
         
