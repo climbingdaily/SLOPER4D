@@ -5,22 +5,24 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 class SLOPER4D_Dataset(Dataset):
-    def __init__(self, pkl_file, device='cpu', return_torch=True):
+    def __init__(self, pkl_file, device='cpu', return_torch=True, print_info=True):
         with open(pkl_file, 'rb') as f:
             data = pickle.load(f)
 
         self.device       = device
         self.return_torch = return_torch
+        self.print_info   = print_info
         self.lidar_fps    = data['LiDAR_info']['fps'] # scalar
         self.smpl_fps     = data['SMPL_info']['fps']  # scalar
         self.smpl_gender  = data['SMPL_info']['gender']  # string
 
-        self.rgb_fps        = data['RGB_info']['fps']        # scalar
-        self.rgb_width      = data['RGB_info']['width']      # scalar
-        self.rgb_height     = data['RGB_info']['height']     # scalar
-        self.rgb_intrinsics = data['RGB_info']['intrinsics'] # list of 4 scalars
-        self.rgb_lidar2cam  = data['RGB_info']['lidar2cam']  # list of 16 scalars
-        self.rgb_dist       = data['RGB_info']['dist']       # list of 5 scalars
+        self.cam = data['RGB_info']
+        # ['fps']        # scalar
+        # ['width']      # scalar
+        # ['height']     # scalar
+        # ['intrinsics'] # list of 4 scalars
+        # ['lidar2cam']  # list of 16 scalars
+        # ['dist']       # list of 5 scalars
 
         self.file_basename = data['RGB_frames']['file_basename'] # list of n strings
         self.bbox          = data['RGB_frames']['bbox']          # n x 4 array of scalars
@@ -88,7 +90,7 @@ class SLOPER4D_Dataset(Dataset):
 
         if self.return_torch:
             for k, v in sample.items():
-                if type(v) != str and type(v) != torch.Tensor:
+                if type(v) != str and type(v) != torch.Tensor and k != 'mask':
                     sample[k] = torch.tensor(v).float().to(self.device)
 
         mispart = ''
@@ -96,7 +98,7 @@ class SLOPER4D_Dataset(Dataset):
         mispart += 'kpt ' if len(sample['skel_2d']) < 1 else ''
         mispart += 'pts ' if len(sample['human_points']) < 1 else ''
            
-        if len(mispart) > 0:
+        if len(mispart) > 0 and self.print_info:
             print(f'Missing {mispart} in: {index} ')
 
         return sample

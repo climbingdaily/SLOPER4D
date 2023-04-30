@@ -21,7 +21,7 @@ import smplx
 import numpy as np
 
 from Render import Renderer
-from vis_utils import test_opencv_video_format, plot_points_on_img, extrinsic_to_cam, plot_coco_annotation
+from vis_utils import test_opencv_video_format, plot_points_on_img, extrinsic_to_cam, plot_coco_annotation, get_bool_array_from_coordinates, load_mask
 from utils import load_point_cloud
 
 from src import  SLOPER4D_Loader
@@ -43,10 +43,11 @@ class SenceRender(object):
                                          return_torch=False)
 
         # camera information
-        self.cam_in    = self.sequence.rgb_intrinsics
-        self.cam_dist  = self.sequence.rgb_dist
-        self.im_width  = self.sequence.rgb_width
-        self.im_height = self.sequence.rgb_height
+        self.cam_fps   = self.sequence.cam['fps']
+        self.cam_in    = self.sequence.cam['intrinsics']
+        self.cam_dist  = self.sequence.cam['dist']
+        self.cam_width  = self.sequence.cam['width']
+        self.cam_height = self.sequence.cam['height']
 
         # prepare files for visualization
         os.makedirs(self.rgb_base, exist_ok=True)
@@ -59,7 +60,7 @@ class SenceRender(object):
 
         if self.draw_smpl:
             self._create_human_model(model_type)
-            self.renderer = Renderer(resolution=(self.im_width, self.im_height), wireframe=args.wireframe)
+            self.renderer = Renderer(resolution=(self.cam_width, self.cam_height), wireframe=args.wireframe)
             if args.index < 0:
                 self.img_smpl_ = self._prepare_output_(self.rgb_base, self.seq_name+'_smpl.mp4')
 
@@ -80,9 +81,9 @@ class SenceRender(object):
         self.smpl_color = np.array([228/255, 60/255, 60/255]) # colorsys.hsv_to_rgb(np.random.rand(), 0.5, 1.0)
 
     def _prepare_output_(self, save_path, basename, fps=0, w=0, h=0):
-        fps = self.sequence.rgb_fps if fps == 0 else fps
-        w   = self.sequence.rgb_width if w == 0 else w
-        h   = self.sequence.rgb_height if h == 0 else h
+        fps = self.cam_fps if fps == 0 else fps
+        w   = self.cam_width if w == 0 else w
+        h   = self.cam_height if h == 0 else h
 
         if not os.path.exists(save_path):
             os.mkdir(save_path)
@@ -198,7 +199,7 @@ class SenceRender(object):
                                               np.asarray(sence_pc.points), 
                                               extrinsic, 
                                               self.cam_in, 
-                                              # self.cam_dist,
+                                              self.cam_dist,
                                               )
                 
                 if index >= 0:
@@ -207,26 +208,26 @@ class SenceRender(object):
                 else:
                     self.scene_pc_.write(img)
 
-            # if self.draw_mask:
-            #     if len(sample['mask']) != 0: 
-            #         coordinate = np.array(sample['mask'])
-            #         masks = get_bool_array_from_coordinates(coordinate)[None, :, :]
-            #         mask_image = load_mask(masks, False)
-            #         img = load_box(sample['bbox'], origin_img.copy())
-            #         img = cv2.add(img, mask_image)
-            #     else:
-            #         img = origin_img
-            #     if index >= 0:
-            #         cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_mask_{index}.jpg'), img)
-            #     else:
-            #         self.masks_.write(img)
+            if self.draw_mask:
+                coordinate = np.array(sample['mask'])
+                masks = get_bool_array_from_coordinates(coordinate)[None, :, :]
+                img = load_mask(masks, False)
+                # img = load_box(sample['bbox'], origin_img.copy())
+                # img = cv2.add(img, mask_image)
+
+                if index >= 0:
+                    cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_mask_{index}.jpg'), img)
+                else:
+                    self.masks_.write(img)
 
 
 def parse_args():
     file_path = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser()
     # parser.add_argument("--pkl_name", type=str, required=True, help="xxx")
-    parser.add_argument('--base_path', type=str, required=True,
+    parser.add_argument('--base_path', type=str, 
+                        # required=True,
+                        default="/wd8t/sloper4d_publish/seq002_football_001",
                         help='path to sequence folder')
     
     parser.add_argument('--index', type=int, default=100,
@@ -253,6 +254,11 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
+    args.draw_coco17 = True
+    args.draw_mask = True
+    args.draw_smpl = True
+    args.draw_human_pc = True
+    args.draw_scene_pc = True
     print(f"Renderring sequence in: {args.base_path}")
 
     det = SenceRender(args)

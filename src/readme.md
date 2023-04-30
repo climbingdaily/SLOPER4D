@@ -20,9 +20,9 @@
 
 
 ## **Tested Environment**
-- Python 3.9
+- Python 3.8, 3.9
 - PyTorch >= 1.8.0
-- CUDA 11.1
+- numpy <= 1.23
 - Ubuntu 18.04
 
 ## **Installation**

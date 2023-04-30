@@ -71,12 +71,9 @@ def plot_coco_annotation(img: np.ndarray,
     
     if bboxes is not None:
         for bbox in bboxes:
-            cv2.rectangle(img, 
-                          (bbox[0], bbox[1]), (bbox[2], bbox[3]), 
-                          color=(220, 173, 69), 
-                          thickness=3)
+            cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), 
+                          color=(220, 173, 69), thickness=3)
             
-    
     if keypoints is not None:
         for per_kpt in keypoints:
             per_kpt    = per_kpt.reshape(-1, 3)
@@ -160,7 +157,7 @@ def load_mask(mask, random_color):
     if random_color:
         color = np.random.rand(3) * 255
     else:
-        color = np.array([100, 50, 0])
+        color = np.array([0, 100, 100])
 
     h, w = mask.shape[-2:]
     mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
