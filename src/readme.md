@@ -19,35 +19,24 @@
 ```
 
 
-## **Environment**
-- Python 3.8.12
+## **Tested Environment**
+- Python 3.8, 3.9
 - PyTorch >= 1.8.0
-- CUDA 11.0
+- numpy <= 1.23
 - Ubuntu 18.04
 
 ## **Installation**
-1. Clone the repository:
 ```bash
 git clone https://github.com/climbingdaily/SLOPER4D.git
-```
-2. Install the required packages:
-```bash
-conda create --name sloper4d python==3.8 -y
+cd SLOPER4D
+conda create --name sloper4d python==3.9 -y
 conda activate sloper4d
-conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=11.0 -c pytorch
 pip install -r requirements.txt
+pip install --upgrade pyopengl==3.1.4 # ignore the warning
 ```
 ## **Dependencies**
 - SMPL: Download v1.0.0 SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl` and `SMPL_MALE.pkl` from http://smpl.is.tue.mpg.de and put them in `./smpl/smpl` directory
-- Install [detectron2](https://github.com/facebookresearch/detectron2.git) and update [pypenGL](https://github.com/mcfletch/pyopengl.git)
-
-   ```bash
-   pip install --upgrade pyopengl==3.1.4 # update pyopengl to 3.1.4
-   # recommend install it from a local clone
-   git clone https://github.com/facebookresearch/detectron2.git
-   python -m pip install -e detectron2
-   ```
-- [FFmpeg](https://ffmpeg.org/download.html) (version >= 3.4.11)
+- (Optional) [FFmpeg](https://ffmpeg.org/download.html) (version >= 3.4.11)
 - (Optional) [CSF](https://github.com/jianboqi/CSF): used for ground segmentation
 
 ## **Processing**

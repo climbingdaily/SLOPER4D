@@ -130,5 +130,8 @@ dmypy.json
 
 .vscode
 *.pkl
+*.pth
+*_test.*
 smpl/*.npy
 /detectron2
+/optimization
