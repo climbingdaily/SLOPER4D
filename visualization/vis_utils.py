@@ -89,7 +89,7 @@ def plot_coco_annotation(img: np.ndarray,
             
     if keypoints is not None and len(keypoints) > 0:
         for per_kpt in keypoints:
-            if len(bbox) == 0:
+            if len(per_kpt) == 0:
                 continue
             per_kpt    = per_kpt.reshape(-1, 3)
             points     = per_kpt[:, :2].astype(int)
