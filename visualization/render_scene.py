@@ -237,8 +237,8 @@ def parse_args():
     # parser.add_argument("--pkl_name", type=str, required=True, help="xxx")
     parser.add_argument('base_path', type=str,
                         help='path to sequence folder')
-    parser.add_argument('--losstype', type=str, default='regression',
-                        help='coco keypoints loss type, used for visualization')
+    parser.add_argument('--losstype', type=str, default='mseloss',
+                        help="mseloss/regression/combined, for 'mseloss', thresh>0.4, for 'regression', thresh>0.05")
     parser.add_argument('--index', type=int, default=-1,
                         help='the index frame to be saved to a image')
     
@@ -265,17 +265,17 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     draw_options = {
-        'coco': args.draw_coco17,
-        'mask': args.draw_mask,
-        'smpl': args.draw_smpl,
-        'human_pc': args.draw_human_pc,
-        'scene_pc': args.draw_scene_pc,
+        'coco'     : args.draw_coco17,
+        'mask'     : args.draw_mask,
+        'smpl'     : args.draw_smpl,
+        'human_pc' : args.draw_human_pc,
+        'scene_pc' : args.draw_scene_pc,
         }
     
     if not np.any(list(draw_options.values())):
-        args.draw_coco17 = True
-        args.draw_mask = True
-        args.draw_smpl = True
+        args.draw_coco17   = True
+        args.draw_mask     = True
+        args.draw_smpl     = True
         args.draw_human_pc = True
         args.draw_scene_pc = True
 

@@ -18,13 +18,7 @@ class SLOPER4D_Dataset(Dataset):
         self.smpl_fps     = data['SMPL_info']['fps']  # scalar
         self.smpl_gender  = data['SMPL_info']['gender']  # string
 
-        self.cam = data['RGB_info']
-        # ['fps']        # scalar
-        # ['width']      # scalar
-        # ['height']     # scalar
-        # ['intrinsics'] # list of 4 scalars
-        # ['lidar2cam']  # list of 16 scalars
-        # ['dist']       # list of 5 scalars
+        self.cam = data['RGB_info']     # 'fps', 'width', 'height', 'intrinsics', 'lidar2cam'(extrinsics), 'dist'
 
         self.file_basename = data['RGB_frames']['file_basename'] # list of n strings
         self.bbox          = data['RGB_frames']['bbox']          # n x 4 array of scalars

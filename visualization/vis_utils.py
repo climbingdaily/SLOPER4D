@@ -84,8 +84,8 @@ def plot_coco_annotation(img: np.ndarray,
     if bboxes is not None and len(bboxes) > 0:
         for bbox in bboxes:
             if len(bbox) > 0:
-                cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), 
-                            color=(220, 173, 69), thickness=3)
+                cv2.rectangle(img, (round(bbox[0]), round(bbox[1])), (round(bbox[2]), round(bbox[3])), 
+                              color=(220, 173, 69), thickness=3)
             
     if keypoints is not None and len(keypoints) > 0:
         for per_kpt in keypoints:
