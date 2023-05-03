@@ -82,9 +82,6 @@ class SMPL(nn.Module):
         self.J = None
         self.R = None
 
-        J_regressor_extra = torch.from_numpy(
-            np.load(cfg.JOINT_REGRESSOR_TRAIN_EXTRA)).float()
-        self.register_buffer('J_regressor_extra', J_regressor_extra)
         self.joints_idx = cfg.JOINTS_IDX
         self.requires_grad_(False)
 

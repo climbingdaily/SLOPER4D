@@ -7,7 +7,6 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import List, Tuple, Optional
-from pycocotools import mask as mask_utils
 
 root_folder = os.path.abspath(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -237,7 +237,7 @@ def parse_args():
     # parser.add_argument("--pkl_name", type=str, required=True, help="xxx")
     parser.add_argument('base_path', type=str,
                         help='path to sequence folder')
-    parser.add_argument('--losstype', type=str, default='mseloss',
+    parser.add_argument('--losstype', type=str, default='regression',
                         help="mseloss/regression/combined, for 'mseloss', thresh>0.4, for 'regression', thresh>0.05")
     parser.add_argument('--index', type=int, default=-1,
                         help='the index frame to be saved to a image')
