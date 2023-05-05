@@ -70,9 +70,7 @@ def plot_coco_annotation(img: np.ndarray,
     overlay = np.copy(img)
 
     if mask is not None and len(mask) > 0:
-        coordinate = np.array(mask)
-        masks = get_bool_array_from_coordinates(coordinate)[None, :, :]
-        mask_image = load_mask(masks, False)
+        mask_image = load_mask(mask, False)
         img = cv2.add(img, mask_image)
         
         # for m in mask:

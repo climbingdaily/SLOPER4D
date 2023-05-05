@@ -27,20 +27,19 @@ from utils import load_point_cloud
 from src import  SLOPER4D_Loader
 
 class SenceRender(object):
-    def __init__(self, args, model_type='smpl'):
+    def __init__(self, args, pkl_path, model_type='smpl'):
         self.seq_name        = os.path.basename(args.base_path)
         self.rgb_base        = os.path.join(args.base_path, "rgb_data", self.seq_name)
         self.img_base_path   = os.path.join(args.base_path, "rgb_data", f"{self.seq_name}_imgs")
         self.pc_base_path    = os.path.join(args.base_path, "lidar_data", "lidar_frames_rot")
-                                            
+                                 
         self.draw_smpl       = args.draw_smpl
         self.draw_coco17     = args.draw_coco17
         self.draw_human_pc   = args.draw_human_pc
         self.draw_scene_pc   = args.draw_scene_pc
         self.draw_mask       = args.draw_mask
 
-        self.sequence  = SLOPER4D_Loader(os.path.join(args.base_path, self.seq_name+"_labels.pkl"), 
-                                         return_torch=False)
+        self.sequence  = SLOPER4D_Loader(pkl_path, return_torch=False)
 
         # camera information
         self.cam_fps   = self.sequence.cam['fps']
@@ -219,9 +218,7 @@ class SenceRender(object):
                     self.scene_pc_.write(img)
 
             if self.draw_mask:
-                coordinate = np.array(sample['mask'])
-                masks = get_bool_array_from_coordinates(coordinate)[None, :, :]
-                img = load_mask(masks, False)
+                img = load_mask(sample['mask'][None, :], False)
                 # img = load_box(sample['bbox'], origin_img.copy())
                 # img = cv2.add(img, mask_image)
 
@@ -234,7 +231,7 @@ class SenceRender(object):
 def parse_args():
     file_path = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser()
-    # parser.add_argument("--pkl_name", type=str, required=True, help="xxx")
+    parser.add_argument("--pkl_path", type=str, default=None, help="xxx")
     parser.add_argument('base_path', type=str,
                         help='path to sequence folder')
     parser.add_argument('--losstype', type=str, default='regression',
@@ -279,7 +276,12 @@ if __name__ == "__main__":
         args.draw_human_pc = True
         args.draw_scene_pc = True
 
+    if args.pkl_path is None or not os.path.isfile(args.pkl_path):
+        pkl_path = os.path.join(args.base_path, os.path.basename(args.base_path)+"_labels.pkl")
+    else:
+        pkl_path = args.pkl_path
+
     print(f"Renderring sequence in: {args.base_path}")
 
-    det = SenceRender(args)
+    det = SenceRender(args, pkl_path)
     det.run(args.index)
