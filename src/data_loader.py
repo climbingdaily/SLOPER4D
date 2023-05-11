@@ -48,7 +48,7 @@ class SLOPER4D_Dataset(Dataset):
         else:
             self.masks = [[]]*self.length
 
-        self.check_lenght()
+        self.check_length()
 
         self.data = data
         self.pkl_file = pkl_file
@@ -74,7 +74,7 @@ class SLOPER4D_Dataset(Dataset):
             pickle.dump(self.data, f)
         print(f"{save_path} saved")
 
-    def check_lenght(self):
+    def check_length(self):
         # Check if all the lists inside rgb_frames have the same length
         assert all(len(lst) == self.length for lst in [self.bbox, self.skel_2d, self.extrinsic, 
                                                        self.tstamp, self.lidar_tstamps, self.masks, 
@@ -84,7 +84,14 @@ class SLOPER4D_Dataset(Dataset):
 
         print(f'Data lenght: {self.length}')
         
-    def return_smpl_verts(self, is_cuda=False):
+    def get_cam_params(self): 
+        return torch.Tensor(self.cam['lidar2cam']), \
+            torch.Tensor(self.cam['intrinsics']), torch.Tensor(self.cam['dist'])
+            
+    def get_img_shape(self):
+        return self.cam['width'], self.cam['height']
+        
+    def get_smpl_verts(self, is_cuda=False):
         from utils import poses_to_vertices_torch
         with torch.no_grad():
             smpl_verts, joints, global_rots = poses_to_vertices_torch(
