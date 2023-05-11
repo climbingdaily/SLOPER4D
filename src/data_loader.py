@@ -122,7 +122,7 @@ class SLOPER4D_Dataset(Dataset):
         self.load_3d_data(data)    
         self.load_rgb_data(data)
         self.load_mask(pkl_file)
-        self.check_lenght()
+        self.check_length()
 
     def load_rgb_data(self, data):
         try:
@@ -211,15 +211,22 @@ class SLOPER4D_Dataset(Dataset):
             pickle.dump(self.data, f)
         print(f"{save_path} saved")
 
-    def check_lenght(self):
+    def check_length(self):
         # Check if all the lists inside rgb_frames have the same length
         assert all(len(lst) == self.length for lst in [self.bbox, self.skel_2d,  
                                                        self.lidar_tstamps, self.masks, 
                                                        self.smpl_pose, self.global_trans, 
                                                        self.human_points])
 
-        print(f'Data lenght: {self.length}')
+        print(f'Data length: {self.length}')
         
+    def get_cam_params(self): 
+        return torch.Tensor(self.cam['lidar2cam']), \
+            torch.Tensor(self.cam['intrinsics']), torch.Tensor(self.cam['dist'])
+            
+    def get_img_shape(self):
+        return self.cam['width'], self.cam['height']
+
     def return_smpl_verts(self, extrinsics=None):
         file_path = os.path.dirname(os.path.abspath(__file__))
         with torch.no_grad():
