@@ -38,6 +38,7 @@ pip install --upgrade pyopengl==3.1.4 # ignore the warning
 - SMPL: Download v1.0.0 SMPL models `SMPL_NEUTRAL.pkl`, `SMPL_FEMALE.pkl` and `SMPL_MALE.pkl` from http://smpl.is.tue.mpg.de and put them in `./smpl/smpl` directory
 - (Optional) [FFmpeg](https://ffmpeg.org/download.html) (version >= 3.4.11)
 - (Optional) [CSF](https://github.com/jianboqi/CSF): used for ground segmentation
+- (Optional) [Metaseg](https://github.com/kadirnar/segment-anything-video): `pip install metaseg`
 
 ## **Processing**
 ```bash
@@ -46,15 +47,14 @@ root_folder=/path/to/sequence_folder
 ```
 
 - ### **Mocap data** 
-   Convert the `bvh` file to `csv` files
    ```bash
+   # Convert the `bvh` file to `csv` files
    # pip install bvh-converter 
    bvh-converter -r $root_folder/mocap_data/${seq_name}_second.bvh
-   ```
 
-   Jumping peak detection. Used to double check the synchronization time in `dataset_params.json`
-   ```bash
-   python utils/detect_jumps.py -M $root_folder/mocap_data/$seq_name\_second.bvh
+   # Jumping peak detection. 
+   # Used to double check the synchronization time in `dataset_params.json`
+   python utils/detect_jumps.py -M $root_folder/mocap_data/${seq_name}_second.bvh
    ```
 
 - ### **LiDAR data** 
@@ -84,15 +84,15 @@ root_folder=/path/to/sequence_folder
    python src/process_human_points.py -R $root_folder  
    ```
 - ### **RGB data** 
-   Convert the video to images in one sequence: 
-
-   ```shell
+   ```bash
+   # Convert the video to images in one sequence: 
    python src/vid2imgs.py $root_folder
-   ```
 
-   Convert the video to images for all sequence: 
-   ```shell
+   # Convert the video to images for all sequence: 
    bash src/batch_vid2imgs.sh $(dirname "$root_folder")
+
+   # (Optional) pip install metaseg used for mask data generation
+   python src/metaseg_demo.py --base_path $root_folder
    ```
 
 ## **Data loader**

@@ -42,7 +42,7 @@ class SenceRender(object):
         self.sequence  = SLOPER4D_Loader(pkl_path, return_torch=False)
 
         # camera information
-        self.cam_fps   = self.sequence.cam['fps']
+        self.out_fps   = self.sequence.framerate
         self.cam_in    = self.sequence.cam['intrinsics']
         self.cam_dist  = self.sequence.cam['dist']
         self.cam_width  = self.sequence.cam['width']
@@ -92,7 +92,7 @@ class SenceRender(object):
         self.smpl_color = np.array([228/255, 60/255, 60/255]) # colorsys.hsv_to_rgb(np.random.rand(), 0.5, 1.0)
 
     def _prepare_output_(self, save_path, basename, fps=0, w=0, h=0):
-        fps = self.cam_fps if fps == 0 else fps
+        fps = self.out_fps if fps == 0 else fps
         w   = self.cam_width if w == 0 else w
         h   = self.cam_height if h == 0 else h
 
