@@ -7,7 +7,6 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import List, Tuple, Optional
-from pycocotools import mask as mask_utils
 
 root_folder = os.path.abspath(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -71,9 +70,7 @@ def plot_coco_annotation(img: np.ndarray,
     overlay = np.copy(img)
 
     if mask is not None and len(mask) > 0:
-        coordinate = np.array(mask)
-        masks = get_bool_array_from_coordinates(coordinate)[None, :, :]
-        mask_image = load_mask(masks, False)
+        mask_image = load_mask(mask, False)
         img = cv2.add(img, mask_image)
         
         # for m in mask:
@@ -84,12 +81,12 @@ def plot_coco_annotation(img: np.ndarray,
     if bboxes is not None and len(bboxes) > 0:
         for bbox in bboxes:
             if len(bbox) > 0:
-                cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), 
-                            color=(220, 173, 69), thickness=3)
+                cv2.rectangle(img, (round(bbox[0]), round(bbox[1])), (round(bbox[2]), round(bbox[3])), 
+                              color=(220, 173, 69), thickness=3)
             
     if keypoints is not None and len(keypoints) > 0:
         for per_kpt in keypoints:
-            if len(bbox) == 0:
+            if len(per_kpt) == 0:
                 continue
             per_kpt    = per_kpt.reshape(-1, 3)
             points     = per_kpt[:, :2].astype(int)
