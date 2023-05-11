@@ -150,7 +150,7 @@ class SLOPER4D_Dataset(Dataset):
             world2lidar[:, :3, :3] = R.from_quat(lidar_traj[:self.length, 4: 8]).inv().as_matrix()
             world2lidar[:, :3, 3:] = -world2lidar[:, :3, :3] @ lidar_traj[:self.length, 1:4].reshape(-1, 3, 1)
             data['RGB_frames']['cam_pose'] = self.cam['lidar2cam'] @ world2lidar
-            self.save_pkl()
+            self.save_pkl(overwrite=True)
 
         self.file_basename = data['RGB_frames']['file_basename'] # list of n strings
         self.lidar_tstamps = data['RGB_frames']['lidar_tstamps'] # n x 1 array of scalars
@@ -204,9 +204,13 @@ class SLOPER4D_Dataset(Dataset):
                 self.data['RGB_frames']['cam_pose'][index] = cam_pose
         else:
             print(f"{img_name} is not in the synchronized labels file")
+    
+    def get_rgb_frames(self, ):
+        return self.data['RGB_frames']
 
-    def save_pkl(self):
-        save_path = self.pkl_file[:-4] + '_updated.pkl'
+    def save_pkl(self, overwrite=False):
+        
+        save_path = self.pkl_file if overwrite else self.pkl_file[:-4] + '_updated.pkl' 
         with open(save_path, 'wb') as f:
             pickle.dump(self.data, f)
         print(f"{save_path} saved")
