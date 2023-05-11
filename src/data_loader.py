@@ -3,28 +3,52 @@ import argparse
 
 import pickle
 import torch
+import smplx
 import numpy as np
 import open3d as o3d
+
+from scipy.spatial.transform import Rotation as R
 from torch.utils.data import Dataset, DataLoader
 
+def camera_to_pixel(X, intrinsics, distortion_coefficients):
+    # focal length
+    f = intrinsics[:2]
+    # center principal point
+    c = intrinsics[2:]
+    k = np.array([distortion_coefficients[0],
+                 distortion_coefficients[1], distortion_coefficients[4]])
+    p = np.array([distortion_coefficients[2], distortion_coefficients[3]])
+    XX = X[..., :2] / (X[..., 2:])
+    # XX = pd.to_numeric(XX, errors='coere')
+    r2 = np.sum(XX[..., :2]**2, axis=-1, keepdims=True)
+
+    radial = 1 + np.sum(k * np.concatenate((r2, r2**2, r2**3),
+                        axis=-1), axis=-1, keepdims=True)
+
+    tan = 2 * np.sum(p * XX[..., ::-1], axis=-1, keepdims=True)
+    XXX = XX * (radial + tan) + r2 * p[..., ::-1]
+    return f * XXX + c
+
+def world_to_pixels(X, extrinsic_matrix, cam):
+    B, N, dim = X.shape
+    X = np.concatenate((X, np.ones((B, N, 1))), axis=-1).transpose(0, 2, 1)
+    X = (extrinsic_matrix @ X).transpose(0, 2, 1)
+    X = camera_to_pixel(X[..., :3].reshape(B*N, dim), cam['intrinsics'], [0]*5)
+    X = X.reshape(B, N, -1)
+    
+    def check_pix(p):
+        rule1 = p[:, 0] > 0
+        rule2 = p[:, 0] < cam['width']
+        rule3 = p[:, 1] > 0
+        rule4 = p[:, 1] < cam['height']
+        rule  = [a and b and c and d for a, b, c, d in zip(rule1, rule2, rule3, rule4)]
+        return p[rule] if len(rule) > 50 else []
+    
+    X = [check_pix(xx) for xx in X]
+
+    return X
+
 def get_bool_from_coordinates(coordinates, shape=(1080, 1920)):
-    """
-    This function takes in a set of coordinates and returns a boolean array with True values at those
-    coordinates.
-    
-    Args:
-      coordinates: The `coordinates` parameter is a numpy array containing the coordinates of points
-    that need to be set to `True` in the boolean array. The first column of the array contains the row
-    indices and the second column contains the column indices.
-      shape: The shape parameter is a tuple representing the dimensions of the boolean array that will
-    be created. In this case, it is set to (1080, 1920), which means the boolean array will have 1080
-    rows and 1920 columns.
-    
-    Returns:
-      a boolean array of shape `(1080, 1920)` where the
-    elements corresponding to the coordinates in the input `coordinates` are set to `True`. If
-    `coordinates` is an empty array, the function returns a boolean array of all `False` values.
-    """
     bool_arr = np.zeros(shape, dtype=bool)
     if len(coordinates) > 0:
         bool_arr[coordinates[:, 0], coordinates[:, 1]] = True
@@ -33,19 +57,18 @@ def get_bool_from_coordinates(coordinates, shape=(1080, 1920)):
 
 def fix_points_num(points: np.array, num_points: int):
     """
-    The function takes in a numpy array of points and a desired number of points, downsamples the points
-    using voxel and uniform downsampling, and either repeats or randomly selects points to reach the
-    desired number.
+    downsamples the points using voxel and uniform downsampling, 
+    and either repeats or randomly selects points to reach the desired number.
     
     Args:
-      points (np.array): `points` is a numpy array containing 3D points.
-      num_points (int): num_points is an integer that represents the desired number of points in the
-    output point cloud.
+      points (np.array): a numpy array containing 3D points.
+      num_points (int): the desired number of points 
     
     Returns:
-      a numpy array of shape `(num_points, 3)` containing the
-    down-sampled or repeated points from the input `points` array. 
+      a numpy array `(num_points, 3)`
     """
+    if len(points) == 0:
+        return np.zeros((num_points, 3))
     points = points[~np.isnan(points).any(axis=-1)]
 
     pc = o3d.geometry.PointCloud()
@@ -67,39 +90,80 @@ def fix_points_num(points: np.array, num_points: int):
         res = points[np.random.choice(origin_num_points, num_points)]
     return res
 
+INTRINSICS = [599.628, 599.466, 971.613, 540.258]
+DIST       = [0.003, -0.003, -0.001, 0.004, 0.0]
+LIDAR2CAM  = [[[-0.0355545576, -0.999323133, -0.0094419378, -0.00330376451], 
+              [0.00117895777, 0.00940596282, -0.999955068, -0.0498469479], 
+              [0.999367041, -0.0355640917, 0.00084373493, -0.0994979365], 
+              [0.0, 0.0, 0.0, 1.0]]]
+
 class SLOPER4D_Dataset(Dataset):
     def __init__(self, pkl_file, 
                  device='cpu', 
-                 return_torch=True, 
-                 fix_pts_num=False,
-                 print_info=True):
+                 return_torch:bool=True, 
+                 fix_pts_num:bool=False,
+                 print_info:bool=True,
+                 return_smpl:bool=False):
+        
         with open(pkl_file, 'rb') as f:
             data = pickle.load(f)
 
+        self.data         = data
+        self.pkl_file     = pkl_file
         self.device       = device
         self.return_torch = return_torch
         self.print_info   = print_info
         self.fix_pts_num  = fix_pts_num
-        self.lidar_fps    = data['LiDAR_info']['fps'] # scalar
-        self.smpl_fps     = data['SMPL_info']['fps']  # scalar
-        self.smpl_gender  = data['SMPL_info']['gender']  # string
+        self.return_smpl  = return_smpl
+        
+        self.framerate = data['framerate'] # scalar
+        self.length    = data['total_frames'] if 'total_frames' in data else len(data['frame_num'])
 
-        self.cam = data['RGB_info']     # 'fps', 'width', 'height', 'intrinsics', 'lidar2cam'(extrinsics), 'dist'
+        self.load_3d_data(data)    
+        self.load_rgb_data(data)
+        self.load_mask(pkl_file)
+        self.check_lenght()
+
+    def load_rgb_data(self, data):
+        try:
+            self.cam = data['RGB_info']     
+        except:
+            print('=====> Load default camera parameters.')
+            self.cam = {'fps':20, 'width': 1920, 'height':1080, 
+                        'intrinsics':INTRINSICS, 'lidar2cam':LIDAR2CAM, 'dist':DIST}
+            
+        if 'RGB_frames' not in data:
+            data['RGB_frames'] = {}
+            lidar_traj = data['first_person']['lidar_traj'].copy()
+
+            data['RGB_frames']['file_basename'] = [''] * self.length
+            data['RGB_frames']['lidar_tstamps'] = lidar_traj[:self.length, -1]
+            data['RGB_frames']['bbox']          = [[]] * self.length
+            data['RGB_frames']['skel_2d']       = [[]] * self.length
+
+            world2lidar = np.array([np.eye(4)] * self.length)
+            world2lidar[:, :3, :3] = R.from_quat(lidar_traj[:self.length, 4: 8]).inv().as_matrix()
+            world2lidar[:, :3, 3:] = -world2lidar[:, :3, :3] @ lidar_traj[:self.length, 1:4].reshape(-1, 3, 1)
+            data['RGB_frames']['cam_pose'] = self.cam['lidar2cam'] @ world2lidar
+
+            world2lidar = np.array([np.eye(4)] * self.length)
+            world2lidar[:, :3, :3] = R.from_quat(lidar_traj[:self.length, 4: 8]).inv().as_matrix()
+            world2lidar[:, :3, 3:] = -world2lidar[:, :3, :3] @ lidar_traj[:self.length, 1:4].reshape(-1, 3, 1)
+            data['RGB_frames']['cam_pose'] = self.cam['lidar2cam'] @ world2lidar
+            self.save_pkl()
 
         self.file_basename = data['RGB_frames']['file_basename'] # list of n strings
+        self.lidar_tstamps = data['RGB_frames']['lidar_tstamps'] # n x 1 array of scalars
+
         self.bbox          = data['RGB_frames']['bbox']          # n x 4 array of scalars
         self.skel_2d       = data['RGB_frames']['skel_2d']       # n x 51 array of scalars
         self.cam_pose      = data['RGB_frames']['cam_pose']      # n x (4, 4)  np.float64, world to camera
-        self.extrinsic     = data['RGB_frames']['extrinsic']     # n x 16 array of scalars
-        self.tstamp        = data['RGB_frames']['tstamp']        # n x 1 array of scalars
-        self.lidar_tstamps = data['RGB_frames']['lidar_tstamps'] # n x 1 array of scalars
-        self.smpl_pose     = data['RGB_frames']['smpl_pose']     # n x 216 array of scalars
-        self.global_trans  = data['RGB_frames']['global_trans']  # n x 3 array of scalars
-        self.betas         = data['RGB_frames']['beta']          # n x 10 array of scalars
-        self.human_points  = data['RGB_frames']['human_points']  # list of n arrays, each of shape (x_i, 3)
 
-        self.length = len(self.file_basename)
+        if self.return_smpl:
+            vertices, _ = self.return_smpl_verts(self.cam_pose)
+            self.smpl_mask = world_to_pixels(vertices.numpy(), self.cam_pose, self.cam)
 
+    def load_mask(self, pkl_file):
         mask_pkl = pkl_file[:-4] + "_mask.pkl"
         if os.path.exists(mask_pkl):
             with open(mask_pkl, 'rb') as f:
@@ -108,10 +172,23 @@ class SLOPER4D_Dataset(Dataset):
         else:
             self.masks = [[]]*self.length
 
-        self.check_lenght()
+    def load_3d_data(self, data, person='second_person', points_num = 1024):
+        assert self.length <= len(data['frame_num']), f"RGB length must be less than point cloud length"
+        point_clouds = [[]] * self.length
+        if 'point_clouds' in data[person]:
+            for i, pf in enumerate(data[person]['point_frame']):
+                index = data['frame_num'].index(pf)
+                if index < self.length:
+                    point_clouds[index] = data[person]['point_clouds'][i]
+        if self.fix_pts_num:
+            point_clouds = np.array([fix_points_num(pts, points_num) for pts in point_clouds])
 
-        self.data = data
-        self.pkl_file = pkl_file
+        sp = data['second_person']
+        self.smpl_pose    = sp['opt_pose'][:self.length].astype(np.float32)  # n x 72 array of scalars
+        self.global_trans = sp['opt_trans'][:self.length].astype(np.float32) # n x 3 array of scalars
+        self.betas        = sp['beta']                                       # n x 10 array of scalars
+        self.smpl_gender  = sp['gender']                                     # male/female/neutral
+        self.human_points = point_clouds                                     # list of n arrays, each of shape (x_i, 3)
 
     def updata_pkl(self, img_name, 
                    bbox=None, 
@@ -136,24 +213,30 @@ class SLOPER4D_Dataset(Dataset):
 
     def check_lenght(self):
         # Check if all the lists inside rgb_frames have the same length
-        assert all(len(lst) == self.length for lst in [self.bbox, self.skel_2d, self.extrinsic, 
-                                                       self.tstamp, self.lidar_tstamps, self.masks, 
+        assert all(len(lst) == self.length for lst in [self.bbox, self.skel_2d,  
+                                                       self.lidar_tstamps, self.masks, 
                                                        self.smpl_pose, self.global_trans, 
-                                                       self.betas, self.human_points])
+                                                       self.human_points])
 
         print(f'Data lenght: {self.length}')
         
-    def return_smpl_verts(self, is_cuda=False):
-        from utils import poses_to_vertices_torch
+    def return_smpl_verts(self, extrinsics=None):
+        file_path = os.path.dirname(os.path.abspath(__file__))
         with torch.no_grad():
-            smpl_verts, joints, global_rots = poses_to_vertices_torch(
-                torch.tensor(self.smpl_pose), 
-                torch.tensor(self.global_trans), 
-                betas=torch.tensor(self.betas)[0:1], 
-                gender=self.smpl_gender,
-                is_cuda=is_cuda)
+            self.human_model = smplx.create(f"{os.path.dirname(file_path)}/smpl",
+                                    gender=self.smpl_gender, 
+                                    use_face_contour=False,
+                                    ext="npz")
+            orient = torch.tensor(self.smpl_pose).float()[:, :3]
+            bpose  = torch.tensor(self.smpl_pose).float()[:, 3:]
+            transl = torch.tensor(self.global_trans).float()
+            smpl_md = self.human_model(betas=torch.tensor(self.betas).reshape(-1, 10).float(), 
+                                    return_verts=True, 
+                                    body_pose=bpose,
+                                    global_orient=orient,
+                                    transl=transl)
             
-            return smpl_verts, joints, global_rots
+        return smpl_md.vertices, smpl_md.joints
             
     def __getitem__(self, index):
         sample = {
@@ -167,9 +250,10 @@ class SLOPER4D_Dataset(Dataset):
 
             'smpl_pose'    : torch.tensor(self.smpl_pose[index]).float().to(self.device),
             'global_trans' : torch.tensor(self.global_trans[index]).float().to(self.device),
-            'betas'        : torch.tensor(self.betas[index]).float().to(self.device),
+            'betas'        : torch.tensor(self.betas).float().to(self.device),
+            'smpl_mask'    : self.smpl_mask[index] if hasattr(self, 'smpl_mask') else [],
 
-            'human_points' : fix_points_num(self.human_points[index], 1024) if self.fix_pts_num else self.human_points[index],
+            'human_points' : self.human_points[index],
         }
 
         if self.return_torch:
@@ -197,14 +281,17 @@ if __name__ == '__main__':
     parser.add_argument('--pkl_file', type=str, 
                         default='/wd8t/sloper4d_publish/seq003_street_002/seq003_street_002_labels.pkl', 
                         help='Path to the pkl file')
-    parser.add_argument('--batch_size', type=int, default=3, 
+    parser.add_argument('--batch_size', type=int, default=1, 
                         help='The batch size of the data loader')
     args = parser.parse_args()
     
     dataset = SLOPER4D_Dataset(args.pkl_file, 
-                               return_torch=True, 
+                               return_torch=False, 
                                fix_pts_num=True)
     
+    # =====> attention 
+    # Batch_size > 1 is not supported yet
+    # because bbox and 2d keypoints missing in some frames
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
     
     root_folder = os.path.dirname(args.pkl_file)
@@ -215,5 +302,4 @@ if __name__ == '__main__':
             img_path  = os.path.join(root_folder, 'rgb_data', sample['file_basename'][i])
             pcd_path  = os.path.join(root_folder, 'lidar_data', 'lidar_frames_rot', pcd_name)
             extrinsic = sample['cam_pose'][i]      # 4x4 lidar to camera transformation
-            keypoints = sample['skel_2d'][i]       # 2D keypoints, coco17 style
-
+            keypoints = sample['skel_2d']       # 2D keypoints, coco17 style
