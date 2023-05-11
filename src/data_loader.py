@@ -122,7 +122,7 @@ class SLOPER4D_Dataset(Dataset):
         self.load_3d_data(data)    
         self.load_rgb_data(data)
         self.load_mask(pkl_file)
-        self.check_lenght()
+        self.check_length()
 
     def load_rgb_data(self, data):
         try:
@@ -218,7 +218,7 @@ class SLOPER4D_Dataset(Dataset):
                                                        self.smpl_pose, self.global_trans, 
                                                        self.human_points])
 
-        print(f'Data lenght: {self.length}')
+        print(f'Data length: {self.length}')
         
     def get_cam_params(self): 
         return torch.Tensor(self.cam['lidar2cam']), \
