@@ -6,7 +6,7 @@
 3. Render annotations to all frames and save them to a video:
     ```shell
     root_folder=/path/to/sequence_folder
-    python ./visualization/render_scene.sh $root_folder
+    python ./visualization/render_scene.py $root_folder
     ```
 
     - Optional parameters：
