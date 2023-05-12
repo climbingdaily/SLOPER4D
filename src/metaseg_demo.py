@@ -19,11 +19,15 @@ from metaseg.generator.build_sam import sam_model_registry
 
 from metaseg.utils import (
     download_model,
-    load_box,
     multi_boxes,
     save_image,
     show_image,
 )
+
+def load_box(box, image, color=(0, 255, 0)):
+    x, y, w, h = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+    cv2.rectangle(image, (x, y), (w, h), color, 2)
+    return image
 
 def load_image(image_path):
 
@@ -247,19 +251,28 @@ class SegManualMaskPredictor:
                 elif type(input_box[0]) == int or type(input_box[0]) == float:
                     input_boxes = np.array(input_box)[None, :]
 
-                    masks, _, _ = predictor.predict(
+                    masks, scores, logits = predictor.predict(
                         point_coords=input_point,
                         point_labels=input_label,
                         box=input_boxes,
                         multimask_output=multimask_output,
                     )
+                    index = np.argmax(scores)
+                    select_mask = masks[index]
+                    coord_mask = compress_masks(select_mask)
                     if save_video:
-                        mask_image = load_mask(masks, random_color)
-                        frame = load_box(input_box, frame)
-                    output_masks.append(compress_masks(masks[0]))
+                        mask_image = load_mask(select_mask, random_color)
+                        (x1, x2, y1, y2) = get_box(coord_mask[:, [1,0]], 
+                                    sequence.cam['height'], 
+                                    sequence.cam['width'], 
+                                    pose_dim=2,
+                                    ratio=0)
+                        frame = load_box([x1, y1, x2, y2], frame)
+                        frame = load_box(input_box, frame, (0, 0, 255))
+                    output_masks.append(coord_mask)
 
                 if save_video:
-                    # mask_image = cv2.add(frame, mask_image)
+                    mask_image = cv2.add(frame, mask_image)
                     out.write(mask_image)
 
         out.release()
@@ -271,17 +284,23 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--img_path", type=str, default='',  help="xxx")
     
-    parser.add_argument("--base_path", type=str, default='/wd8t/sloper4d_publish/seq002_football_001', help="xxx")
+    parser.add_argument("--base_path", type=str, default='/wd8t/sloper4d_publish/seq003_street_002', help="xxx")
     
     parser.add_argument("--vid_path", type=str, default=None, help="video path")
     
     parser.add_argument("--pkl_path", type=str, default=None, help="xxx")
+
+    parser.add_argument("--smpl_box", action='store_true', 
+                        help="whether to use the SMPL projection as the input box prompt")
     
     parser.add_argument('--thresh', type=float, default=0.6, 
                         help="the keypoints threshold that used to as point prompt")
     
-    parser.add_argument('--save_video', type=bool, default=False,
+    parser.add_argument('--save_video', action='store_true',
                         help='output a video when segment the video')
+    
+    parser.add_argument('--over_write', action='store_true',
+                        help='whether to overwrite the pkl file for new bbox')
     
     return parser.parse_args()
 
@@ -314,19 +333,20 @@ if __name__ == "__main__":
         sequence = SLOPER4D_Loader(pkl_file, return_torch=False, return_smpl=True)
         out_fps  = sequence.cam['fps']
         valid_ts = [ts[:-4] for ts in sequence.file_basename]
-        if False:
+        if args.smpl_box:
             # load bboxes from the SMPL projection
             boxes = load_boxes(sequence.smpl_mask, sequence.bbox, sequence.cam, ratio=0.1)
+            kpts = [[]] * len(boxes)
         else:
             boxes = sequence.bbox
-        kpts     = sequence.skel_2d
+            kpts = sequence.skel_2d
 
         results = SegManualMaskPredictor().video_predict(
             source           = vid_path,
             model_type       = "vit_l", # vit_l, vit_h, vit_b
             input_all_boxes  = boxes,
             input_all_point  = kpts,
-            multimask_output = False,
+            multimask_output = True,
             random_color     = False,
             output_path      = f"{vid_path[:-4]}_mask.mp4",
             out_fps          = out_fps,
@@ -344,7 +364,7 @@ if __name__ == "__main__":
                             ratio=0)
                 sequence.updata_pkl(imgname, bbox=[x1, y1, x2, y2])
 
-        sequence.save_pkl(overwrite=True)
+        sequence.save_pkl(overwrite=args.overwrite)
         
         with open(pkl_file[:-4] + "_mask.pkl", 'wb') as f:
             pickle.dump({'masks': results}, f)
