@@ -119,11 +119,22 @@ class SLOPER4D_Dataset(Dataset):
         self.framerate = data['framerate'] # scalar
         self.length    = data['total_frames'] if 'total_frames' in data else len(data['frame_num'])
 
+        self.world2lidar, self.lidar_tstamps = self.load_lidar_data(data)
         self.load_3d_data(data)    
         self.load_rgb_data(data)
         self.load_mask(pkl_file)
+
         self.check_length()
 
+    def load_lidar_data(self, data):
+        lidar_traj    = data['first_person']['lidar_traj'].copy()
+        lidar_tstamps = lidar_traj[:self.length, -1]
+        world2lidar   = np.array([np.eye(4)] * self.length)
+        world2lidar[:, :3, :3] = R.from_quat(lidar_traj[:self.length, 4: 8]).inv().as_matrix()
+        world2lidar[:, :3, 3:] = -world2lidar[:, :3, :3] @ lidar_traj[:self.length, 1:4].reshape(-1, 3, 1)
+
+        return world2lidar, lidar_tstamps
+    
     def load_rgb_data(self, data):
         try:
             self.cam = data['RGB_info']     
@@ -134,30 +145,19 @@ class SLOPER4D_Dataset(Dataset):
             
         if 'RGB_frames' not in data:
             data['RGB_frames'] = {}
-            lidar_traj = data['first_person']['lidar_traj'].copy()
-
+            world2lidar, lidar_tstamps = self.load_lidar_data(data)
             data['RGB_frames']['file_basename'] = [''] * self.length
-            data['RGB_frames']['lidar_tstamps'] = lidar_traj[:self.length, -1]
+            data['RGB_frames']['lidar_tstamps'] = lidar_tstamps[:self.length]
             data['RGB_frames']['bbox']          = [[]] * self.length
             data['RGB_frames']['skel_2d']       = [[]] * self.length
-
-            world2lidar = np.array([np.eye(4)] * self.length)
-            world2lidar[:, :3, :3] = R.from_quat(lidar_traj[:self.length, 4: 8]).inv().as_matrix()
-            world2lidar[:, :3, 3:] = -world2lidar[:, :3, :3] @ lidar_traj[:self.length, 1:4].reshape(-1, 3, 1)
-            data['RGB_frames']['cam_pose'] = self.cam['lidar2cam'] @ world2lidar
-
-            world2lidar = np.array([np.eye(4)] * self.length)
-            world2lidar[:, :3, :3] = R.from_quat(lidar_traj[:self.length, 4: 8]).inv().as_matrix()
-            world2lidar[:, :3, 3:] = -world2lidar[:, :3, :3] @ lidar_traj[:self.length, 1:4].reshape(-1, 3, 1)
-            data['RGB_frames']['cam_pose'] = self.cam['lidar2cam'] @ world2lidar
+            data['RGB_frames']['cam_pose']      = self.cam['lidar2cam'] @ world2lidar
             self.save_pkl(overwrite=True)
 
-        self.file_basename = data['RGB_frames']['file_basename'] # list of n strings
-        self.lidar_tstamps = data['RGB_frames']['lidar_tstamps'] # n x 1 array of scalars
-
-        self.bbox          = data['RGB_frames']['bbox']          # n x 4 array of scalars
-        self.skel_2d       = data['RGB_frames']['skel_2d']       # n x 51 array of scalars
-        self.cam_pose      = data['RGB_frames']['cam_pose']      # n x (4, 4)  np.float64, world to camera
+        self.file_basename = data['RGB_frames']['file_basename'] # synchronized img file names
+        self.lidar_tstamps = data['RGB_frames']['lidar_tstamps'] # synchronized ldiar timestamps
+        self.bbox          = data['RGB_frames']['bbox']          # 2D bbox of the tracked human (N, [x1, y1, x2, y2])
+        self.skel_2d       = data['RGB_frames']['skel_2d']       # 2D keypoints (N, [17, 3]), every joint is (x, y, probability)
+        self.cam_pose      = data['RGB_frames']['cam_pose']      # extrinsic, world to camera (N, [4, 4])
 
         if self.return_smpl:
             vertices, _ = self.return_smpl_verts(self.cam_pose)
@@ -251,20 +251,25 @@ class SLOPER4D_Dataset(Dataset):
             
     def __getitem__(self, index):
         sample = {
-            'file_basename': self.file_basename[index],     
-            'lidar_tstamps': self.lidar_tstamps[index],
-
-            'bbox'         : self.bbox[index],
-            'mask'         : get_bool_from_coordinates(self.masks[index]),
-            'skel_2d'      : self.skel_2d[index],
-            'cam_pose'     : self.cam_pose[index],    
+           
+            'file_basename': self.file_basename[index],  # image file name            
+            'lidar_tstamps': self.lidar_tstamps[index],  # lidar timestamp           
+           
+            'bbox'    : self.bbox[index],     # 2D bbox (x1, y1, x2, y2)                      
+            'mask'    : get_bool_from_coordinates(self.masks[index]),  # 2D mask (height, width)
+            'skel_2d' : self.skel_2d[index],   # 2D keypoints (x, y, probability)                    
+            'cam_pose': self.cam_pose[index],  # 4*4 transformation, world to camera                    
 
             'smpl_pose'    : torch.tensor(self.smpl_pose[index]).float().to(self.device),
             'global_trans' : torch.tensor(self.global_trans[index]).float().to(self.device),
             'betas'        : torch.tensor(self.betas).float().to(self.device),
-            'smpl_mask'    : self.smpl_mask[index] if hasattr(self, 'smpl_mask') else [],
 
-            'human_points' : self.human_points[index],
+            # 2D mask of SMPL on images, (n, [x, y]), where (x, y) is the pixel coordinate on the image
+            'smpl_mask'    : self.smpl_mask[index] if hasattr(self, 'smpl_mask') else [],   
+
+            # in world coordinates, (n, (x, y, z)), the n is different in each frame
+            # if fix_point_num is True, the every frame will be resampled to 1024 points
+            'human_points' : self.human_points[index],                  
         }
 
         if self.return_torch:

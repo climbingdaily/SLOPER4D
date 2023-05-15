@@ -188,8 +188,8 @@ class SenceRender(object):
                     img = plot_points_on_img(origin_img.copy(), 
                                              np.array(sample['human_points']), 
                                              extrinsic, 
-                                             self.cam_in, 
-                                             self.cam_dist)
+                                             intrinsic=self.cam_in, 
+                                             dist=self.cam_dist,)
                 else:
                     img = origin_img
                     
@@ -207,9 +207,8 @@ class SenceRender(object):
                 img      = plot_points_on_img(origin_img.copy(), 
                                               np.asarray(sence_pc.points), 
                                               extrinsic, 
-                                              self.cam_in, 
-                                              self.cam_dist,
-                                              )
+                                              intrinsic=self.cam_in, 
+                                              dist=self.cam_dist,)
                 
                 if index >= 0:
                     cv2.imwrite(os.path.join(self.rgb_base, f'{self.seq_name}_scene_pc_{index}.jpg'), img)
