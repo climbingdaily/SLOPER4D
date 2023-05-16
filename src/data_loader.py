@@ -119,15 +119,15 @@ class SLOPER4D_Dataset(Dataset):
         self.framerate = data['framerate'] # scalar
         self.length    = data['total_frames'] if 'total_frames' in data else len(data['frame_num'])
 
-        self.world2lidar, self.lidar_tstamps = self.load_lidar_data(data)
+        self.world2lidar, self.lidar_tstamps = self.get_lidar_data()
         self.load_3d_data(data)    
         self.load_rgb_data(data)
         self.load_mask(pkl_file)
 
         self.check_length()
 
-    def load_lidar_data(self, data):
-        lidar_traj    = data['first_person']['lidar_traj'].copy()
+    def get_lidar_data(self, is_inv=True):
+        lidar_traj    = self.data['first_person']['lidar_traj'].copy()
         lidar_tstamps = lidar_traj[:self.length, -1]
         world2lidar   = np.array([np.eye(4)] * self.length)
         world2lidar[:, :3, :3] = R.from_quat(lidar_traj[:self.length, 4: 8]).inv().as_matrix()
@@ -145,7 +145,7 @@ class SLOPER4D_Dataset(Dataset):
             
         if 'RGB_frames' not in data:
             data['RGB_frames'] = {}
-            world2lidar, lidar_tstamps = self.load_lidar_data(data)
+            world2lidar, lidar_tstamps = self.get_lidar_data()
             data['RGB_frames']['file_basename'] = [''] * self.length
             data['RGB_frames']['lidar_tstamps'] = lidar_tstamps[:self.length]
             data['RGB_frames']['bbox']          = [[]] * self.length

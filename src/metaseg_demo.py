@@ -334,7 +334,7 @@ if __name__ == "__main__":
         out_fps  = sequence.cam['fps']
         valid_ts = [ts[:-4] for ts in sequence.file_basename]
         if args.smpl_box:
-            # load bboxes from the SMPL projection
+            print("load bboxes from the SMPL projection")
             boxes = load_boxes(sequence.smpl_mask, sequence.bbox, sequence.cam, ratio=0.1)
             kpts = [[]] * len(boxes)
         else:
@@ -364,7 +364,7 @@ if __name__ == "__main__":
                             ratio=0)
                 sequence.updata_pkl(imgname, bbox=[x1, y1, x2, y2])
 
-        sequence.save_pkl(overwrite=args.overwrite)
+        sequence.save_pkl(overwrite=args.over_write)
         
         with open(pkl_file[:-4] + "_mask.pkl", 'wb') as f:
             pickle.dump({'masks': results}, f)
