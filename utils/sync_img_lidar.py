@@ -50,23 +50,19 @@ def interpolate_transform_matrices(transform_matrices, timestamps, target_ts):
 def parse_args():
     import argparse
     parser = argparse.ArgumentParser()
-    # basics
-    parser.add_argument('--base_path', default= '/wd8t/sloper4d_publish',
-        type=str, #required=True,
-        help='path to dataset'
-    )
-    parser.add_argument("--scene_name", default='seq002_football_001',
-        type=str, #required=True 
-    )
-
+    parser.add_argument('root_folder', type=str, default=None, 
+        help='path to dataset')
+    parser.add_argument('-I', '--interpolate', action='store_true',
+        help='whether to interpolate the rotation by SLERP')
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = parse_args()
-    scene_path       = os.path.join(args.base_path, args.scene_name)
-    pkl_path         = os.path.join(scene_path, args.scene_name+'_labels.pkl')
+    scene_path       = args.root_folder
+    scene_name       = os.path.basename(args.root_folder)
+    pkl_path         = os.path.join(scene_path, scene_name+'_labels.pkl')
     data_params_path = os.path.join(scene_path, 'dataset_params.json')
-    vdo_path         = os.path.join(scene_path, 'rgb_data', args.scene_name+'.MP4')
+    vdo_path         = os.path.join(scene_path, 'rgb_data', scene_name+'.MP4')
     
     # open video
     vid = cv2.VideoCapture()
@@ -131,9 +127,11 @@ if __name__ == '__main__':
     lidar2world  = np.array([np.eye(4)] * lenght)
     lidar2world[:, :3, :3] = R.from_quat(lidar_traj[:, 4: 8]).as_matrix()
     lidar2world[:, :3, 3:] = lidar_traj[:, 1:4].reshape(-1, 3, 1)
-    offset = lidar_tstamp[0] - time_rgb_in_lidar[0]
-    interpolate_rt = interpolate_transform_matrices(lidar2world, lidar_tstamp, time_rgb_in_lidar + offset)
 
+    if args.interpolate:
+        print('Rotations will be interpolated...')
+        offset = lidar_tstamp[0] - time_rgb_in_lidar[0]
+        lidar2world = interpolate_transform_matrices(lidar2world, lidar_tstamp, time_rgb_in_lidar + offset)
     world2lidar    = np.array([np.eye(4)] * lenght)
     world2lidar[:, :3, :3] = R.from_matrix(lidar2world[:, :3, :3]).inv().as_matrix()
     world2lidar[:, :3, 3:] = -world2lidar[:, :3, :3] @ lidar2world[:, :3, 3:].reshape(-1, 3, 1)
@@ -145,8 +143,8 @@ if __name__ == '__main__':
 
     rf['bbox']     = rf['bbox'][:lenght]
     rf['skel_2d']  = rf['skel_2d'][:lenght]
-    rf['cam_pose'] = rf['cam_pose'][:lenght]
-    # rf['cam_pose'] = data_params_data['RGB_info']['lidar2cam'] @ world2lidar
+    # rf['cam_pose'] = rf['cam_pose'][:lenght]
+    rf['cam_pose'] = data_params_data['RGB_info']['lidar2cam'] @ world2lidar
 
     sequence.save_pkl(overwrite=True)
         
