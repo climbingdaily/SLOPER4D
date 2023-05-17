@@ -131,7 +131,7 @@ if __name__ == '__main__':
     if args.interpolate:
         print('Rotations will be interpolated...')
         offset = lidar_tstamp[0] - time_rgb_in_lidar[0]
-        lidar2world = interpolate_transform_matrices(lidar2world, lidar_tstamp, time_rgb_in_lidar + offset)
+        lidar2world = interpolate_transform_matrices(lidar2world, lidar_tstamp, time_rgb_in_lidar)
     world2lidar    = np.array([np.eye(4)] * lenght)
     world2lidar[:, :3, :3] = R.from_matrix(lidar2world[:, :3, :3]).inv().as_matrix()
     world2lidar[:, :3, 3:] = -world2lidar[:, :3, :3] @ lidar2world[:, :3, 3:].reshape(-1, 3, 1)

@@ -25,38 +25,10 @@ import configargparse
 sys.path.append(dirname(split(abspath( __file__))[0]))
 
 from utils.tsdf_fusion_pipeline import VDBFusionPipeline
-from utils import poses_to_joints, mocap_to_smpl_axis, save_json_file, read_json_file, sync_lidar_mocap, load_csv_data
+from utils import poses_to_joints, mocap_to_smpl_axis, sync_lidar_mocap
+from utils import save_json_file, read_json_file, load_csv_data, print_table
 
 field_fmts = ['%d', '%.6f', '%.6f', '%.6f', '%.6f', '%.6f', '%.6f', '%.6f', '%.3f']
-
-def print_table(title, headers, rows):
-    # 计算每列的最大宽度
-    col_widths = [len(str(header)) for header in headers]
-    for row in rows:
-        for i, item in enumerate(row):
-            col_widths[i] = max(col_widths[i], len(str(item)))
-    
-    # 打印表格标题
-    title_width = sum(col_widths) + len(headers) * 3 - 1
-    print(f"\n{title.center(title_width)}")
-    
-    # 打印表格上部边框
-    print("┌" + "─" * (col_widths[0] + 2) + "┬" + "─" * (col_widths[1] + 2) + "┬" + "─" * (col_widths[2] + 2) + "┐")
-    
-    # 打印表头
-    header_str = "│ " + " │ ".join(header.ljust(col_widths[i]) for i, header in enumerate(headers)) + " │"
-    print(header_str)
-    
-    # 打印表格中部分隔线
-    print("├" + "─" * (col_widths[0] + 2) + "┼" + "─" * (col_widths[1] + 2) + "┼" + "─" * (col_widths[2] + 2) + "┤")
-    
-    # 打印表格内容
-    for row in rows:
-        row_str = "│ " + " │ ".join(str(row[i]).ljust(col_widths[i]) for i in range(len(row))) + " │"
-        print(row_str)
-        
-    # 打印表格下部边框
-    print("└" + "─" * (col_widths[0] + 2) + "┴" + "─" * (col_widths[1] + 2) + "┴" + "─" * (col_widths[2] + 2) + "┘")
 
 def load_time(folder, index=None):
     """
@@ -106,38 +78,58 @@ def traj_to_kitti_main(lidar_trajs, start, end, root_dir = None):
 
     return kitti_format_poses
 
-def save_trajs(save_dir, rot, pos, mocap_id, comments='first'):
-    """
-    It takes in the rotation and position data from the mocap system, and saves it in a format that the
-    [KITTI evaluation toolkit](http://www.cvlibs.net/datasets/kitti/eval_odometry.php) can read. 
-
-    Args:
-      save_dir: the directory to save the trajectory file
-      rot: rotation of the person in the world frame
-      pos: the position of the person in the world frame
-      mocap_id: the frame number of the mocap data
-      comments: a string that will be added to the filename of the saved trajectory. Defaults to first
-    
-    Returns:
-      The translation of the person's position.
-    """
+def save_trajs(save_dir, rot, pos, mocap_id, comments='first', framerate=100):
     # lidar_file = os.path.join(save_dir, 'lidar_traj.txt')
     save_file = os.path.join(save_dir, f'{comments}_person_traj.txt')
-
     init = np.array([[-1,0,0],[0,0,1],[0,1,0]])
 
     t = pos[:, 0] @ init.T
     r = R.from_rotvec(rot[:, :3]).as_quat()
-    time = np.array(mocap_id).reshape(-1, 1)/100    # -->second
+    time = np.array(mocap_id).reshape(-1, 1)/framerate    # -->second
     
-    save_data = np.concatenate((time * 100, t, r, time), axis=1)
+    save_data = np.concatenate((np.array(mocap_id).reshape(-1, 1), t, r, time), axis=1)
     np.savetxt(save_file, save_data, fmt=field_fmts)
 
     print('Save traj in: ', save_file)
 
     return t 
 
-def save_sync_data(root_folder, start=0, end=np.inf):
+def check_sync_valid(keytime_a, keytime_b, min_time_gap = 50, offset=1.5):
+    gap_time = abs(keytime_a[-1] - keytime_a[0]) - abs(keytime_b[-1] - keytime_b[0])
+    if keytime_a[-1] - keytime_a[0] > min_time_gap and abs(gap_time) < offset:
+        return True, gap_time
+    else:
+        return False, 0
+
+def make_sensor_params(sensor, gap_frame):
+    info = f"{sensor['syncid'][gap_frame]} ({sensor['times'][sensor['syncid'][gap_frame]]}s) " if gap_frame>0 else gap_frame
+    return {"Framerate"       : sensor['framerate'],
+            "Total frames"    : len(sensor['times']),
+            "Start frame"     : f"{sensor['syncid'][0]} ({sensor['times'][sensor['syncid'][0]]:.3f}s)",
+            "- Keyframe"      : f"{sensor['keyid'][0]} ({sensor['keytime'][0]:.3f}s)",
+            "- Gapframe"      : info,
+            "- Keyframe2"     : f"{sensor['keyid'][-1]} ({sensor['keytime'][-1]:.3f}s)",
+            "End frame"       : f"{sensor['syncid'][-1]} ({sensor['times'][sensor['syncid'][-1]]:.3f}s)",
+            "Relative keytime": f"{sensor['keytime'][-1] - sensor['keytime'][0]:.3f}"}
+
+def update_data(save_data, person, save_trans, save_pose):
+    betas = np.array([0.0] * 10)
+    if 'betas' in dataset_params[f'{person}_person']:
+        betas = dataset_params[f'{person}_person']['betas']
+    if 'gender' in dataset_params[f'{person}_person']:
+        gender = dataset_params[f'{person}_person']['gender']
+    else:
+        gender = 'male'
+    if f'{person}_person' not in save_data:
+        save_data[f'{person}_person'] = {}
+
+    save_data[f'{person}_person'].update({
+                                'beta': betas, 
+                                'gender': gender, 
+                                'pose': save_pose, 
+                                'mocap_trans': save_trans})
+
+def save_sync_data(root_folder, start=0, end=np.inf, gap_frame=-1):
     """
     > It takes in the path to the data folder, and returns the poses of the two people, the translations
     of the two people, and the frame numbers of the lidar data
@@ -147,21 +139,26 @@ def save_sync_data(root_folder, start=0, end=np.inf):
       start: the start frame of the video.
       end: the last frame to be processed. Defaults to inf
     """
-    first_data = True
+    first_data  = True
     second_data = True
-    lidar_dir        = glob(root_folder + '/lidar_data/*lidar_frames_rot')[0]
-    json_path        = glob(root_folder + '/*dataset_params.json')[0]
+
+    lidar_dir   = glob(root_folder + '/lidar_data/*lidar_frames_rot')[0]
+    json_path   = glob(root_folder + '/*dataset_params.json')[0]
 
     # lidar_trajectory = glob(root_folder + '/*lidar_trajectory.txt')[0]
     save_dir = os.path.join(root_folder, 'synced_data')
     param_file = os.path.join(save_dir, 'humans_param.pkl')
     os.makedirs(save_dir, exist_ok=True)
 
-    lidar_time = load_time(lidar_dir)
-    lidar_framerate = round(1 / np.diff(lidar_time).mean())
-    
     dataset_params = read_json_file(json_path)
-    dataset_params['lidar_framerate'] = lidar_framerate
+    lidar = {}
+    mocap = {}
+
+    lidar['times'] = load_time(lidar_dir)
+    lidar['framerate'] = 1 / np.diff(lidar['times']).mean()
+    mocap['framerate'] = dataset_params['mocap_framerate']
+
+    dataset_params['lidar_framerate'] = lidar['framerate']
     save_json_file(json_path, dataset_params)
 
     try:
@@ -171,14 +168,18 @@ def save_sync_data(root_folder, start=0, end=np.inf):
             print(f"Synced data loaded in: {param_file}")
         else:
             save_data = {}
-    except Exception as e:
+    except:
         save_data = {}
 
+    def load_csv(search_str='*'):
+        rot_csv = glob(root_folder + f'/mocap_data/*{search_str}_rot*.csv')[0]
+        pos_csv = glob(root_folder + f'/mocap_data/*{search_str}_*pos.csv')[0]
+        pos, rot, col = load_csv_data(rot_csv, pos_csv)
+        mocap['times'] = rot[:, 0]
+        return pos, rot, col
+    
     try:
-        first_rot_csv    = glob(root_folder + '/mocap_data/*first_rot*.csv')[0]
-        first_pos_csv    = glob(root_folder + '/mocap_data/*first_*pos.csv')[0]
-        first_pos, first_rot, col_names = load_csv_data(first_rot_csv, first_pos_csv)
-        mocap_time = first_rot[:, 0]
+        first_pos, first_rot, col_names = load_csv('first')
     except BaseException:
         print('=======================')
         print('No first person data!!')
@@ -186,17 +187,11 @@ def save_sync_data(root_folder, start=0, end=np.inf):
         first_data = False
         
     try:
-        second_rot_csv   = glob(root_folder + '/mocap_data/*second_rot*.csv')[0]
-        second_pos_csv   = glob(root_folder + '/mocap_data/*second_*pos.csv')[0]
-        second_pos, second_rot, col_names = load_csv_data(second_rot_csv, second_pos_csv)
-        mocap_time = second_rot[:, 0]
-    except Exception:
+        second_pos, second_rot, col_names = load_csv('second')
+    except:
         try:
-            second_rot_csv   = glob(root_folder + '/mocap_data/*_rot*.csv')[0]
-            second_pos_csv   = glob(root_folder + '/mocap_data/*_*pos.csv')[0]
-            second_pos, second_rot, col_names = load_csv_data(second_rot_csv, second_pos_csv)
-            mocap_time = second_rot[:, 0]
-        except Exception:
+            second_pos, second_rot, col_names = load_csv('*')
+        except:
             print('=======================')
             print('No second person data!!')
             print('=======================')
@@ -206,139 +201,111 @@ def save_sync_data(root_folder, start=0, end=np.inf):
         print("No mocap data in './mocap_data/'!!!")
         exit(0)
     
-    lidar_keytime = dataset_params['lidar_sync'][0]
-    if type(lidar_keytime) == int:
-        lidar_keytime = lidar_time[lidar_keytime]
+    lidar['keytime']  = dataset_params['lidar_sync']   # lidar keytime for synchronization
+    mocap['keytime']  = dataset_params['mocap_sync']   # mocap keytime for synchronization
 
-    mocap_keytime = dataset_params['mocap_sync'][0]
-    if type(mocap_keytime) == int:
-        mocap_keytime = mocap_time[mocap_keytime]
+    def get_keyid(sensor: dict):
+        keyid = []
+        for kt in sensor['keytime']:
+            keyid.append(np.where(abs(sensor['times'] - kt) < 1/sensor['framerate'])[0][0])
+        return keyid
+    
+    lidar['keyid'] =  get_keyid(lidar)
+    mocap['keyid'] =  get_keyid(mocap)
+
+    double_sync, gap_time = check_sync_valid(lidar['keytime'], mocap['keytime'])
     
     # 1. sync. data
-    sync_lidarid, sync_mocapid = sync_lidar_mocap(lidar_time, mocap_time, lidar_keytime, mocap_keytime)
-    lidar_keyid = np.where(abs(lidar_time - lidar_keytime) < 1/lidar_framerate)[0][0]
-    mocap_keyid = np.where(abs(mocap_time - mocap_keytime) < 1/dataset_params['mocap_framerate'])[0][0]
+    lidar['syncid'], mocap['syncid'] = sync_lidar_mocap(lidar['times'], mocap['times'], 
+                                                  lidar['keytime'][0], mocap['keytime'][0], 
+                                                  1/mocap['framerate'])
 
     # 2 choose start time
     if 'start' in dataset_params:
         start =  dataset_params['start']
     elif start == 0:
-        start = int(lidar_keyid) - lidar_framerate * 2
+        start = int(lidar['keyid'][0]) - round(lidar['framerate']) * 2
     else:
-        start = min(int(lidar_keyid) - lidar_framerate * 2, start) 
+        start = min(int(lidar['keyid'][0]) - round(lidar['framerate']) * 2, start) 
 
-    start = sync_lidarid.index(start) if start in sync_lidarid else 0
-    end   = sync_lidarid.index(end) if end in sync_lidarid else len(sync_lidarid) - 1
+    start = lidar['syncid'].index(start) if start in lidar['syncid'] else 0
+    end   = lidar['syncid'].index(end) if end in lidar['syncid'] else len(lidar['syncid']) - 1
 
-    sync_lidarid = sync_lidarid[start:end+1]
-    sync_mocapid = sync_mocapid[start:end+1]
+    # 3. if frame dropping occurs in mocap data
+    gap_frame = dataset_params['gap_frame'] if 'gap_frame' in dataset_params else gap_frame
+    if double_sync and gap_frame > 0:
+        lidar['syncid2'], mocap['syncid2'] = sync_lidar_mocap(lidar['times'], mocap['times'], 
+                                                        lidar['keytime'][-1], mocap['keytime'][-1],
+                                                        1/mocap['framerate'])
+        offset_frame = lidar['syncid2'][0] - lidar['syncid'][0]
+        # dropping frames in mocap data
+        if offset_frame > 0:
+            if lidar['syncid'][end] in lidar['syncid2']:
+                from_end = lidar['syncid2'].index(lidar['syncid'][end]) 
+            else:
+                from_end = len(lidar['syncid']) - 1
+            
+            lidar['syncid'] = lidar['syncid'][start: start + gap_frame] + \
+                           lidar['syncid2'][start + gap_frame - offset_frame: from_end + 1]
+            mocap['syncid'] = mocap['syncid'][start: start + gap_frame] + \
+                           mocap['syncid2'][start + gap_frame - offset_frame: from_end + 1]
+            assert (np.diff(np.array(lidar['syncid'])) != 1).sum() == 0, "LiDAR data is not "
+    else:
+        lidar['syncid'] = lidar['syncid'][start:end+1]
+        mocap['syncid'] = mocap['syncid'][start:end+1]
 
-    lidar_params = {"framerate": lidar_framerate,
-                    "Key frame": int(lidar_keyid),
-                    "Key time 1": lidar_keytime,
-                    "Key time 2": dataset_params['lidar_sync'][-1],
-                    "Relative time": f"{dataset_params['lidar_sync'][-1] - lidar_keytime:.3f}",
-                    "Start frame": sync_lidarid[0],
-                    "End frame": sync_lidarid[-1],
-                    "Total frames": len(lidar_time)}
-    
-    mocap_params = {"framerate": dataset_params['mocap_framerate'],
-                    "Key frame": int(mocap_keyid),
-                    "Key time 1": mocap_keytime,
-                    "Key time 2": dataset_params['mocap_sync'][-1],
-                    "Relative time": f"{dataset_params['mocap_sync'][-1] - mocap_keytime:.3f}",
-                    "Start frame": int(sync_mocapid[0]),
-                    "End frame": int(sync_mocapid[-1]),
-                    "Total frames": len(mocap_time)}
-    
-    dataset_params['lidar'] = lidar_params
-    dataset_params['mocap'] = mocap_params
+    # 4. print the necessary information
+    dataset_params['lidar'] = make_sensor_params(lidar, gap_frame)
+    dataset_params['mocap'] = make_sensor_params(mocap, gap_frame)
     save_json_file(json_path, dataset_params)
-    
-    # 构建表格内容的列表
-    table_rows = []
-    for param in lidar_params:
-        row = [param, lidar_params[param], mocap_params[param]]
-        table_rows.append(row)
-    
-    print_table("Synchronization Parameters", ["Parameter", "LiDAR", "Mocap(IMU)"], table_rows)
+    print_table("Synchronization Parameters", 
+                ["Parameter", "LiDAR", "Mocap(IMU)"],
+                [dataset_params['lidar'], dataset_params['mocap']])
+    print(f'Reletive keytime offset: {-gap_time:.3f}\n')
 
-    if sync_lidarid[0] > 1000:
+    if lidar['syncid'][0] > 1000:
         print("Note that the starting frame for the LiDAR is > 1000.")
         print("It is recommended to manually set the starting frame number.")
 
+    # start to sync all the data
     if first_data:
-        sync_pose, _  = mocap_to_smpl_axis(first_rot[sync_mocapid], 
+        sync_pose, _  = mocap_to_smpl_axis(first_rot[mocap['syncid']], 
                                             fix_orit = False, 
                                             col_name=col_names)
         # 2. save synced mocap trans
-        trans = save_trajs(save_dir, sync_pose,
-                                first_pos[sync_mocapid], sync_mocapid)
+        trans = save_trajs(save_dir, sync_pose, first_pos[mocap['syncid']], mocap['syncid'], mocap['framerate'])
 
-        joints, verts    = poses_to_joints(sync_pose[:1], return_verts=True) 
-        feet_center      = (joints[0, 7] + joints[0, 8])/2
-        feet_center[2]   = verts[..., 2].min()
-        trans           -= trans[0] + feet_center  # make the first frame at the origin
+        joints, verts  = poses_to_joints(sync_pose[:1], return_verts=True) 
+        feet_center    = (joints[0, 7] + joints[0, 8])/2
+        feet_center[2] = verts[..., 2].min()
+        trans      -= trans[0] + feet_center  # 使得第一帧位于原点
 
         # 3. save synced data
-        betas = np.array([0.0] * 10)
-        if 'betas' in dataset_params['first_person']:
-            betas = dataset_params['first_person']['betas']
-            
-        if 'gender' in dataset_params['first_person']:
-            gender = dataset_params['first_person']['gender']
-        else:
-            gender = 'male'
-
-        if 'first_person' not in save_data:
-            save_data['first_person'] = {}
-
-        save_data['first_person'].update({
-                                    'beta': betas, 
-                                    'gender': gender, 
-                                    'pose': sync_pose, 
-                                    'mocap_trans': trans})
+        update_data(save_data, 'first', trans, sync_pose)
 
     if second_data:
         fix_orit = True if not first_data else False
 
-        sync_pose_2nd, delta_r = mocap_to_smpl_axis(second_rot[sync_mocapid], 
+        sync_pose_2nd, delta_r = mocap_to_smpl_axis(second_rot[mocap['syncid']], 
                                            fix_orit=fix_orit,
                                            col_name=col_names)
 
         second_trans = save_trajs(save_dir, sync_pose_2nd, 
-                                  second_pos[sync_mocapid] @ delta_r.T, 
-                                  sync_mocapid, 'second')
-
-        betas = np.array([0.0] * 10)
-        if 'betas' in dataset_params['second_person']:
-            betas = dataset_params['second_person']['betas']
-
-        if 'gender' in dataset_params['second_person']:
-            gender = dataset_params['second_person']['gender']
-        else:
-            gender = 'male'
-
-        if 'second_person' not in save_data:
-            save_data['second_person'] = {}
-            
-        save_data['second_person'].update({
-                                    'beta': betas, 
-                                    'gender': gender, 
-                                    'pose': sync_pose_2nd, 
-                                    'mocap_trans':second_trans})
+                                  second_pos[mocap['syncid']] @ delta_r.T, 
+                                  mocap['syncid'], 'second', mocap['framerate'])
+        update_data(save_data, 'second', second_trans, sync_pose_2nd)
         if not first_data:
             trans = second_trans
             sync_pose = sync_pose_2nd
 
-    save_data['frame_num'] = sync_lidarid
-    save_data['framerate'] = lidar_framerate
+    save_data['frame_num'] = lidar['syncid']
+    save_data['framerate'] = lidar['framerate']
 
     with open(param_file, "wb") as f:
         pickle.dump(save_data, f)
         print(f"File saved in {param_file}")
     
-    return sync_pose, trans, sync_lidarid, param_file   # type: ignore
+    return sync_pose, trans, lidar['syncid'], param_file   # type: ignore
 
 def add_lidar_traj(synced_data_file, lidar_traj):
     """

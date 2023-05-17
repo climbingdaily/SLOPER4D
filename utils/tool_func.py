@@ -534,6 +534,43 @@ def poses_to_vertices(poses, batch_size = 128, trans=None, is_cuda=True):
             vertices += np.expand_dims(trans, 1)
     return vertices
 
+def print_table(title, headers, contents, print_func=print, print_title=True):
+
+    table_rows = []
+    for param in contents[0]:
+        row = [param] + [loss[param] for loss in contents]
+        table_rows.append(row)
+
+    # 计算每列的最大宽度
+    col_widths = [len(str(header)) for header in headers]
+    for row in table_rows:
+        for i, item in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(str(item)))
+    
+    # 打印表格标题
+    title_width = sum(col_widths) + len(headers) * 3 - 1
+    if print_title:
+        print_func(f"\n{title.center(title_width)}")
+    # print_func(title)
+    
+    # 打印表格上部边框
+    print_func("┌" + "".join(["─" * (col+2) + "┬" for col in col_widths[:-1]]) + "─" * (col_widths[-1] + 2) + "┐")
+    
+    # 打印表头
+    header_str = "│ " + " │ ".join(header.ljust(col_widths[i]) for i, header in enumerate(headers)) + " │"
+    print_func(header_str)
+    
+    # 打印表格中部分隔线
+    print_func("├" + ''.join(["─" * (col+2) + "┼" for col in col_widths[:-1]]) + "─" * (col_widths[-1] + 2) + "┤")
+    
+    # 打印表格内容
+    for row in table_rows:
+        row_str = "│ " + " │ ".join(str(row[i]).ljust(col_widths[i]) for i in range(len(row))) + " │"
+        print_func(row_str)
+        
+    # 打印表格下部边框
+    print_func("└" + ''.join(["─" * (col+2) + "┴" for col in col_widths[:-1]]) + "─" * (col_widths[-1] + 2) + "┘")
+
 def save_json_file(file_name, save_dict):
     """
     Saves a dictionary into json file
