@@ -1,1 +1,2 @@
 from .vis_utils import get_bool_array_from_coordinates, load_mask
+from .vis_utils import plot_points_on_img, extrinsic_to_cam, plot_coco_annotation, get_bool_array_from_coordinates

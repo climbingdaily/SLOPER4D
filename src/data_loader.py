@@ -225,8 +225,9 @@ class SLOPER4D_Dataset(Dataset):
         print(f'Data length: {self.length}')
         
     def get_cam_params(self): 
-        return torch.Tensor(self.cam['lidar2cam']), \
-            torch.Tensor(self.cam['intrinsics']), torch.Tensor(self.cam['dist'])
+        return torch.from_numpy(np.array(self.cam['lidar2cam']).astype(np.float32)).to(self.device), \
+               torch.from_numpy(np.array(self.cam['intrinsics']).astype(np.float32)).to(self.device), \
+               torch.from_numpy(np.array(self.cam['dist']).astype(np.float32)).to(self.device)
             
     def get_img_shape(self):
         return self.cam['width'], self.cam['height']
@@ -234,14 +235,14 @@ class SLOPER4D_Dataset(Dataset):
     def return_smpl_verts(self, extrinsics=None):
         file_path = os.path.dirname(os.path.abspath(__file__))
         with torch.no_grad():
-            self.human_model = smplx.create(f"{os.path.dirname(file_path)}/smpl",
+            human_model = smplx.create(f"{os.path.dirname(file_path)}/smpl",
                                     gender=self.smpl_gender, 
                                     use_face_contour=False,
                                     ext="npz")
             orient = torch.tensor(self.smpl_pose).float()[:, :3]
             bpose  = torch.tensor(self.smpl_pose).float()[:, 3:]
             transl = torch.tensor(self.global_trans).float()
-            smpl_md = self.human_model(betas=torch.tensor(self.betas).reshape(-1, 10).float(), 
+            smpl_md = human_model(betas=torch.tensor(self.betas).reshape(-1, 10).float(), 
                                     return_verts=True, 
                                     body_pose=bpose,
                                     global_orient=orient,
@@ -254,6 +255,7 @@ class SLOPER4D_Dataset(Dataset):
            
             'file_basename': self.file_basename[index],  # image file name            
             'lidar_tstamps': self.lidar_tstamps[index],  # lidar timestamp           
+            'lidar_pose'   : self.world2lidar[index],    # 4*4 transformation, world to lidar                    
            
             'bbox'    : self.bbox[index],     # 2D bbox (x1, y1, x2, y2)                      
             'mask'    : get_bool_from_coordinates(self.masks[index]),  # 2D mask (height, width)
