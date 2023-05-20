@@ -160,8 +160,8 @@ class SLOPER4D_Dataset(Dataset):
         self.cam_pose      = data['RGB_frames']['cam_pose']      # extrinsic, world to camera (N, [4, 4])
 
         if self.return_smpl:
-            vertices, _ = self.return_smpl_verts(self.cam_pose)
-            self.smpl_mask = world_to_pixels(vertices.numpy(), self.cam_pose, self.cam)
+            self.smpl_verts, _ = self.return_smpl_verts()
+            self.smpl_mask = world_to_pixels(self.smpl_verts, self.cam_pose, self.cam)
 
     def load_mask(self, pkl_file):
         mask_pkl = pkl_file[:-4] + "_mask.pkl"
@@ -232,7 +232,7 @@ class SLOPER4D_Dataset(Dataset):
     def get_img_shape(self):
         return self.cam['width'], self.cam['height']
 
-    def return_smpl_verts(self, extrinsics=None):
+    def return_smpl_verts(self, ):
         file_path = os.path.dirname(os.path.abspath(__file__))
         with torch.no_grad():
             human_model = smplx.create(f"{os.path.dirname(file_path)}/smpl",
@@ -248,7 +248,7 @@ class SLOPER4D_Dataset(Dataset):
                                     global_orient=orient,
                                     transl=transl)
             
-        return smpl_md.vertices, smpl_md.joints
+        return smpl_md.vertices.numpy(), smpl_md.joints.numpy()
             
     def __getitem__(self, index):
         sample = {
@@ -268,6 +268,7 @@ class SLOPER4D_Dataset(Dataset):
 
             # 2D mask of SMPL on images, (n, [x, y]), where (x, y) is the pixel coordinate on the image
             'smpl_mask'    : self.smpl_mask[index] if hasattr(self, 'smpl_mask') else [],   
+            'smpl_verts'   : self.smpl_verts[index] if hasattr(self, 'smpl_verts') else [],   
 
             # in world coordinates, (n, (x, y, z)), the n is different in each frame
             # if fix_point_num is True, the every frame will be resampled to 1024 points
