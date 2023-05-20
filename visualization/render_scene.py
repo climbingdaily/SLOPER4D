@@ -21,7 +21,7 @@ import smplx
 import numpy as np
 
 from Render import Renderer
-from vis_utils import test_opencv_video_format, plot_points_on_img, extrinsic_to_cam, plot_coco_annotation, get_bool_array_from_coordinates, load_mask
+from vis_utils import test_opencv_video_format, plot_points_on_img, extrinsic_to_cam, plot_coco_annotation, load_mask
 from utils import load_point_cloud
 
 from src import  SLOPER4D_Loader
@@ -39,7 +39,7 @@ class SenceRender(object):
         self.draw_scene_pc   = args.draw_scene_pc
         self.draw_mask       = args.draw_mask
 
-        self.sequence  = SLOPER4D_Loader(pkl_path, return_torch=False)
+        self.sequence  = SLOPER4D_Loader(pkl_path, return_torch=False, print_info=False)
 
         # camera information
         self.out_fps   = self.sequence.framerate

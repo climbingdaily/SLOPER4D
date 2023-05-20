@@ -124,18 +124,6 @@ if __name__ == '__main__':
     lidar_traj   = sequence.data['first_person']['lidar_traj'].copy()[:lenght]
     lidar_tstamp = lidar_tstamp[:lenght]
 
-    lidar2world  = np.array([np.eye(4)] * lenght)
-    lidar2world[:, :3, :3] = R.from_quat(lidar_traj[:, 4: 8]).as_matrix()
-    lidar2world[:, :3, 3:] = lidar_traj[:, 1:4].reshape(-1, 3, 1)
-
-    if args.interpolate:
-        print('Rotations will be interpolated...')
-        offset = lidar_tstamp[0] - time_rgb_in_lidar[0]
-        lidar2world = interpolate_transform_matrices(lidar2world, lidar_tstamp, time_rgb_in_lidar)
-    world2lidar    = np.array([np.eye(4)] * lenght)
-    world2lidar[:, :3, :3] = R.from_matrix(lidar2world[:, :3, :3]).inv().as_matrix()
-    world2lidar[:, :3, 3:] = -world2lidar[:, :3, :3] @ lidar2world[:, :3, 3:].reshape(-1, 3, 1)
-
     # update the rgb frames
     rf = sequence.get_rgb_frames()
     rf['file_basename'] = file_basename
@@ -143,8 +131,20 @@ if __name__ == '__main__':
 
     rf['bbox']     = rf['bbox'][:lenght]
     rf['skel_2d']  = rf['skel_2d'][:lenght]
-    # rf['cam_pose'] = rf['cam_pose'][:lenght]
-    rf['cam_pose'] = data_params_data['RGB_info']['lidar2cam'] @ world2lidar
+    
+    if args.interpolate:
+        lidar2world  = np.array([np.eye(4)] * lenght)
+        lidar2world[:, :3, :3] = R.from_quat(lidar_traj[:, 4: 8]).as_matrix()
+        lidar2world[:, :3, 3:] = lidar_traj[:, 1:4].reshape(-1, 3, 1)
+        print('Rotations will be interpolated...')
+        offset = lidar_tstamp[0] - time_rgb_in_lidar[0]
+        lidar2world = interpolate_transform_matrices(lidar2world, lidar_tstamp, time_rgb_in_lidar)
+        world2lidar    = np.array([np.eye(4)] * lenght)
+        world2lidar[:, :3, :3] = R.from_matrix(lidar2world[:, :3, :3]).inv().as_matrix()
+        world2lidar[:, :3, 3:] = -world2lidar[:, :3, :3] @ lidar2world[:, :3, 3:].reshape(-1, 3, 1)
+        rf['cam_pose'] = data_params_data['RGB_info']['lidar2cam'] @ world2lidar
+    else:
+        rf['cam_pose'] = rf['cam_pose'][:lenght]
 
     sequence.save_pkl(overwrite=True)
         
