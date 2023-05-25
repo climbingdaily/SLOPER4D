@@ -302,6 +302,8 @@ if __name__ == '__main__':
                         help='Path to the pkl file')
     parser.add_argument('--batch_size', type=int, default=1, 
                         help='The batch size of the data loader')
+    parser.add_argument('--index', type=int, default=-1,
+                        help='the index frame to be saved to a image')
     args = parser.parse_args()
     
     dataset = SLOPER4D_Dataset(args.pkl_file, 
@@ -315,10 +317,13 @@ if __name__ == '__main__':
     
     root_folder = os.path.dirname(args.pkl_file)
 
-    for _, sample in enumerate(dataloader):
+    for index, sample in enumerate(dataloader):
         for i in range(args.batch_size):
             pcd_name  = f"{sample['lidar_tstamps'][i]:.03f}".replace('.', '_') + '.pcd'
             img_path  = os.path.join(root_folder, 'rgb_data', sample['file_basename'][i])
             pcd_path  = os.path.join(root_folder, 'lidar_data', 'lidar_frames_rot', pcd_name)
             extrinsic = sample['cam_pose'][i]      # 4x4 lidar to camera transformation
             keypoints = sample['skel_2d']       # 2D keypoints, coco17 style
+            if index == args.index:
+                print(f"{index} pcd path: {pcd_path}")
+                print(f"{index} img path: {img_path}")

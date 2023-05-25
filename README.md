@@ -22,8 +22,8 @@
   </p>
 
 <p align="center">
-  <a href="https://arxiv.org/pdf/2303.09095.pdf">
-    <img src='https://img.shields.io/badge/ArXiv-green?style=for-the-badge&logo=adobeacrobatreader&logoWidth=20&logoColor=white&labelColor=c94330&color=db5a44' alt='Paper PDF'>
+  <a href="https://openaccess.thecvf.com/content/CVPR2023/papers/Dai_SLOPER4D_A_Scene-Aware_Dataset_for_Global_4D_Human_Pose_Estimation_CVPR_2023_paper.pdf">
+    <img src='https://img.shields.io/badge/PDF-green?style=for-the-badge&logo=adobeacrobatreader&logoWidth=20&logoColor=white&labelColor=c94330&color=db5a44' alt='Paper PDF'>
   </a>
   <a href="http://www.lidarhumanmotion.net/data-sloper4d/">
     <img src='https://img.shields.io/badge/Dataset-success?style=for-the-badge' alt='Dataset (Coming soon)...'>
@@ -142,11 +142,12 @@ The SLOPER4D codebase is published under the Creative [Commons Attribution-NonCo
 
 ## Citation
 ```
-@inproceedings{dai2023sloper4d,
+@InProceedings{Dai_2023_CVPR,
+    author    = {Dai, Yudi and Lin, Yitai and Lin, Xiping and Wen, Chenglu and Xu, Lan and Yi, Hongwei and Shen, Siqi and Ma, Yuexin and Wang, Cheng},
     title     = {SLOPER4D: A Scene-Aware Dataset for Global 4D Human Pose Estimation in Urban Environments},
-    author    = {Dai, Yudi and Lin, YiTai and Lin, XiPing and Wen, Chenglu and Xu, Lan and Yi, Hongwei and Shen, Siqi and Ma, Yuexin and Wang, Cheng},
-    booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
     month     = {June},
-    year      = {2023}
+    year      = {2023},
+    pages     = {682-692}
 }
 ```
