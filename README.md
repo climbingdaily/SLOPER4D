@@ -48,6 +48,7 @@
 
 ## News and Updates
 - *More info is coming soon…*
+- **03/18/2024**: [Blender Add-on](/blender_add_on/) for visualization
 - **05/11/2023**: Released a [SAM-based tool](src/metaseg_demo.py) for 2D mask generation and updated the data loader example.
 - **04/2023**: First part of the dataset V1.0 has released! ([Dataset](http://www.lidarhumanmotion.net/data-sloper4d/))
 - **03/2023**: Initial release of the visualization Tool ([SMPL-Scene Viewer](https://github.com/climbingdaily/SMPL-Scene-Viewer)) (v1.0)
