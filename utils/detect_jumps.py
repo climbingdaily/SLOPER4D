@@ -173,8 +173,12 @@ def plot_all_peaks(times, jumps, heights, frame_rate, fit_window):
     n_subplots = len(jumps)
 
     # 计算最接近平方数的整数作为行数和列数
-    num_rows   = int(np.sqrt(n_subplots - 1)) + 1
-    num_cols   = int(np.ceil(n_subplots / num_rows))
+    if n_subplots < 1:
+        num_rows = 1
+        num_cols = 1
+    else:
+        num_rows   = int(np.sqrt(n_subplots - 1)) + 1
+        num_cols   = int(np.ceil(n_subplots / num_rows))
 
     # 动态设置图像大小，长宽尽可能小
     fig_width  = 4 * num_cols
